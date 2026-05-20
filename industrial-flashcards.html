@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<title>Industrial Flashcards</title>
+
+<!-- iOS PWA / Home Screen support -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Flashcards" />
+<meta name="theme-color" content="#1a2332" />
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a2332'/><rect x='34' y='52' width='100' height='70' rx='10' fill='%23ffffff' opacity='0.95'/><rect x='46' y='40' width='100' height='70' rx='10' fill='%23ffffff'/><text x='96' y='86' font-family='Inter, system-ui, sans-serif' font-size='40' font-weight='800' text-anchor='middle' fill='%231a2332'>IOS</text></svg>" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #fafbfc;
+    --border: #e3e5ea;
+    --border-strong: #c9ccd4;
+    --text: #1a1d24;
+    --text-soft: #555a66;
+    --text-mute: #8a8f99;
+    --accent: #1a2332;
+    --accent-soft: #eef1f7;
+    --gold: #c9a84c;
+    --green: #2e8b57;
+    --green-soft: #e6f4ea;
+    --red: #b03030;
+    --red-soft: #fbeaea;
+    --shadow: 0 6px 24px rgba(20, 25, 40, 0.06), 0 1px 3px rgba(20, 25, 40, 0.04);
+    --shadow-lift: 0 18px 48px rgba(20, 25, 40, 0.12), 0 2px 6px rgba(20, 25, 40, 0.06);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  html { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: contain;
+  }
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+    padding-top: max(32px, env(safe-area-inset-top));
+    padding-bottom: max(80px, calc(env(safe-area-inset-bottom) + 24px));
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .title-block h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.02em;
+  }
+  .title-block p {
+    margin: 0;
+    color: var(--text-soft);
+    font-size: 14px;
+  }
+  .stats {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .stat-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--text-soft);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stat-pill b { color: var(--text); font-weight: 700; }
+  .stat-pill.known { background: var(--green-soft); border-color: #c8e6d3; color: #1e6b40; }
+  .stat-pill.known b { color: #134b2c; }
+
+  .toolbar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .topic-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--border-strong); color: var(--text); }
+  .chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .chip .count {
+    margin-left: 6px;
+    opacity: 0.7;
+    font-weight: 400;
+    font-size: 12px;
+  }
+
+  .card-stage {
+    perspective: 1600px;
+    margin-bottom: 22px;
+  }
+  .card {
+    position: relative;
+    width: 100%;
+    min-height: 380px;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0.0, 0.2, 1);
+    cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lift);
+    padding: 36px 44px;
+    display: flex;
+    flex-direction: column;
+  }
+  .face.back { transform: rotateY(180deg); }
+  .face-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+  .topic-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 5px 10px;
+    border-radius: 6px;
+  }
+  .side-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-mute);
+  }
+  .term-text {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--text);
+    margin: auto 0;
+    text-align: center;
+    padding: 0 8px;
+  }
+  .definition-text {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text);
+    margin: 4px 0 auto;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+  .definition-text::-webkit-scrollbar { width: 6px; }
+  .definition-text::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  .face-footer {
+    text-align: center;
+    color: var(--text-mute);
+    font-size: 12px;
+    margin-top: 16px;
+    font-weight: 500;
+  }
+  .face-footer kbd {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-soft);
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 11px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow);
+  }
+  .btn:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { background: #232f44; }
+  .btn.icon { padding: 10px 12px; }
+  .progress-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+  }
+  .progress-text {
+    font-size: 13px;
+    color: var(--text-soft);
+    font-weight: 500;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 5px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+
+  .mark-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .btn.known-btn {
+    background: var(--green-soft);
+    border-color: #c8e6d3;
+    color: #1e6b40;
+  }
+  .btn.known-btn:hover { background: #d8edd e; }
+  .btn.known-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn.review-btn {
+    background: var(--red-soft);
+    border-color: #f0cdcd;
+    color: #8a2828;
+  }
+  .btn.review-btn:hover { background: #f5dada; }
+  .btn.review-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+
+  .actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+  .filter-toggle input { cursor: pointer; accent-color: var(--accent); }
+
+  .empty-state {
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-soft);
+  }
+  .empty-state h3 { margin: 0 0 6px; color: var(--text); font-size: 18px; }
+  .empty-state p { margin: 0; font-size: 14px; }
+
+  @media (max-width: 700px) {
+    .container {
+      padding: 20px 14px 60px;
+      padding-top: max(20px, env(safe-area-inset-top));
+      padding-bottom: max(60px, calc(env(safe-area-inset-bottom) + 16px));
+      padding-left: max(14px, env(safe-area-inset-left));
+      padding-right: max(14px, env(safe-area-inset-right));
+    }
+    header.top { margin-bottom: 16px; }
+    .title-block h1 { font-size: 22px; }
+    .title-block p { font-size: 13px; }
+    .stat-pill { padding: 6px 10px; font-size: 12px; }
+    .toolbar { padding: 10px; margin-bottom: 14px; }
+    .chip { padding: 7px 12px; font-size: 12px; }
+    .face { padding: 24px 20px; }
+    .card { min-height: 340px; }
+    .term-text { font-size: 26px; }
+    .definition-text { font-size: 15px; line-height: 1.55; }
+    .btn { padding: 14px 18px; font-size: 15px; min-height: 48px; }
+    .controls { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .progress-wrap { order: -1; grid-column: 1 / -1; }
+    .mark-row { gap: 8px; margin-bottom: 12px; }
+    .mark-row .btn { flex: 1; }
+    .actions-row { flex-direction: column; align-items: stretch; }
+    .actions-row > div { display: flex; gap: 8px; }
+    .actions-row > div .btn { flex: 1; }
+    .face-footer { font-size: 11px; }
+    .face-footer kbd { display: none; }
+  }
+  @media (max-width: 700px) and (hover: none) {
+    .face-footer { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="top">
+    <div class="title-block">
+      <h1>Industrial Lingo Flashcards</h1>
+      <p>Study deck for IOS and industrial real estate terminology</p>
+    </div>
+    <div class="stats">
+      <div class="stat-pill"><span>Deck:</span><b id="stat-deck">0</b></div>
+      <div class="stat-pill known"><span>Known:</span><b id="stat-known">0</b></div>
+      <div class="stat-pill"><span>Total:</span><b id="stat-total">0</b></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="topic-chips" id="topic-chips"></div>
+  </div>
+
+  <div class="card-stage">
+    <div class="card" id="card" tabindex="0" role="button" aria-label="Flashcard, click to flip">
+      <div class="face front">
+        <div class="face-header">
+          <span class="topic-tag" id="front-topic">—</span>
+          <span class="side-label">Term</span>
+        </div>
+        <div class="term-text" id="term">—</div>
+        <div class="face-footer">Click card or press <kbd>Space</kbd> to flip</div>
+      </div>
+      <div class="face back">
+        <div class="face-header">
+          <span class="topic-tag" id="back-topic">—</span>
+          <span class="side-label">Definition</span>
+        </div>
+        <div class="definition-text" id="definition">—</div>
+        <div class="face-footer">Click card or press <kbd>Space</kbd> to flip back</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mark-row">
+    <button class="btn review-btn" id="btn-review" title="Mark this card to review again">Need review</button>
+    <button class="btn known-btn" id="btn-known" title="Mark this card known">Got it</button>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btn-prev" title="Previous (←)">← Prev</button>
+    <div class="progress-wrap">
+      <span class="progress-text" id="progress-text">0 / 0</span>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <button class="btn primary" id="btn-next" title="Next (→)">Next →</button>
+  </div>
+
+  <div class="actions-row">
+    <label class="filter-toggle">
+      <input type="checkbox" id="hide-known" />
+      <span>Hide cards I've marked known</span>
+    </label>
+    <div style="display:flex; gap:8px;">
+      <button class="btn" id="btn-shuffle">Shuffle</button>
+      <button class="btn" id="btn-reset" title="Clear all known/review marks">Reset progress</button>
+    </div>
+  </div>
+
+  <div class="empty-state" id="empty-state" style="display:none; margin-top:18px;">
+    <h3>No cards in this view</h3>
+    <p>Try unchecking "Hide known" or selecting a different topic.</p>
+  </div>
+</div>
+
+<script>
+const CARDS = [
+  // Building shell
+  { topic: "Building Shell", term: "Slab", def: "The concrete floor of the warehouse. Typically 6\"–8\" thick, reinforced with rebar or fiber mesh, poured directly on a compacted gravel base. Typical: 6\"–7\" at 4,000 PSI compressive strength. Ideal modern Class A: 7\"–8\" at 5,000 PSI with FF50/FL35 finish for forklift and AS/RS operations. 90's-era buildings: commonly 5\"–6\" slabs, often with cracking, joint failures, and floor flatness issues that prevent narrow-aisle racking. Re-pouring a slab is a million-dollar+ proposition on a big building, so it's a one-time decision." },
+  { topic: "Building Shell", term: "Slab-on-grade buildings", def: "Buildings where the slab is poured directly on prepared subgrade at natural ground level, with no basement or crawl space. The standard for virtually all modern American industrial construction. The alternative — slab over a structural floor system — exists mostly in dense urban multi-story logistics (NYC, Brooklyn, parts of LA) and remains rare and very expensive." },
+  { topic: "Building Shell", term: "FF/FL ratings", def: "Two related measurements of floor quality. FF (Floor Flatness) measures local undulations — the \"bumpiness\" of the slab. FL (Floor Levelness) measures the overall tilt across the floor. Both are unitless numbers; higher is better. Typical older industrial: FF20–30/FL15–20, fine for general warehouse use. Modern Class A: FF50/FL35 minimum. Required for AS/RS or very-narrow-aisle racking: FF60+/FL40+, sometimes FF100+ for the actual rack aisles (these are \"super-flat\" floors and cost meaningfully more to install). Required for automation: tenant-specific, often FF75+. Slab flatness is fixable only to a limited extent — surface grinding can improve FF but does little for FL, so a bad slab is essentially a permanent constraint on tenant use." },
+  { topic: "Building Shell", term: "Minimum clear height for high-racking", def: "The shorthand industry tiers: 24'–28' clear = older buildings, limited to 4-high pallet racking. 28'–32' = shallow/mid-bay modern, supports 5-high racking. 32'–36' = standard modern logistics, supports 6-high. 36'–40' = institutional big-box, supports 7-high. 40'+ = \"future-proofed\" bulk distribution and increasingly common for AS/RS. Practical floor: 32' clear is the threshold below which modern logistics tenants start passing. Note that the limiting factor is often the sprinkler system, not the structure — a 36' clear building with a non-ESFR sprinkler can only effectively rack to ~20'." },
+  { topic: "Building Shell", term: "ESFR sprinklers", def: "Early Suppression Fast Response sprinklers. A specific type of automatic fire sprinkler designed for high-rack storage in tall warehouses. Standard sprinklers were designed to control fires; ESFR sprinklers suppress them — they fire faster, deliver more water, and overwhelm developing fires before they can spread up rack stacks. Required: for racked storage above ~25' clear, per NFPA 13. Standard in modern Class A: yes, universally. Common gap in 90's-era buildings: many have ESFR up to a certain height but were never upgraded for taller racking — a building with 36' clear and \"ESFR\" can have ESFR rated only to 32' of storage. Always ask for the actual rated storage height in the spec sheet. Retrofit ESFR is doable but costs $3–6/SF depending on the configuration." },
+  { topic: "Building Shell", term: "Column grid", def: "The structural grid of columns supporting the roof. Expressed as \"depth × width\" with depth meaning the dimension perpendicular to the dock face. Typical: 50' × 50' or 50' × 54' for modern Class A logistics. Wider Class A: 54' × 60' or even 60' × 60' for newer construction — gives tenants maximum flexibility in racking layout. 90's-era buildings: 40' × 40' was common, which constrains racking aisles and reduces tenant universe. Older Class B: sometimes 30' × 30' or less, essentially obsolete for modern racking." },
+  { topic: "Building Shell", term: "Bay", def: "A single structural module defined by the column grid — the rectangular floor area between four columns. A building with a 50' × 54' column grid has 2,700 SF bays. Used to describe both the structural unit and (colloquially) areas of the building." },
+  { topic: "Building Shell", term: "Speed bay", def: "The first row of structural bays at the dock face, set deeper than the rest of the grid (typically 60' deep instead of 50') to give forklifts working room to maneuver between the dock doors and the start of the racking. Standard in modern Class A: yes, virtually all modern big-box has speed bays. Missing in older buildings: yes, and it's a significant functional gap — forklift drivers can't turn safely at the dock, slowing operations." },
+  { topic: "Building Shell", term: "Loading bay", def: "Colloquial term for the bay (structural module) at the dock face containing the dock door. Overlaps in usage with \"dock.\" When a broker says \"this is the loading bay,\" they mean the structural bay at the dock face, but they're often gesturing at the dock door itself." },
+  { topic: "Building Shell", term: "Shallow-bay", def: "A building where the depth (front-to-back) is 1–2 structural bays, typically ~100' total depth. Tenant profile: small-bay industrial, IOS-adjacent uses, last-mile delivery, light manufacturing. Pure example: Rexford's bread-and-butter — sub-100K SF infill SoCal product. Typical clear height: 20'–28'. Often grade-level loading mixed with limited dock doors." },
+  { topic: "Building Shell", term: "Mid-bay", def: "Buildings 3–4 bays deep, typically 150'–200' total depth. Sit between shallow and big-box. Tenant profile: regional distribution, light manufacturing, larger flex users. Typical clear height: 28'–32'." },
+  { topic: "Building Shell", term: "Big-bay", def: "Buildings 5+ bays deep, often 250'+ total depth, sometimes 600'+ for the largest distribution centers. Tenant profile: 3PLs, big-box distribution, e-commerce fulfillment, large national tenants. Typical clear height: 36'+. The Prologis \"Gateway\" and \"Multi-market\" categories live here." },
+  { topic: "Building Shell", term: "Office / mezzanine size", def: "The portion of the building built out as office space, typically expressed as a percentage of total building SF. Modern Class A logistics target: under 5% — minimal office, maximum warehouse productivity. 90's-era spec: often 10–15% office, sometimes more, which reads as functionally obsolete to modern tenants because the office portion drags on $/SF rents. Office is often located on a mezzanine (an elevated interior floor) near the dock face for visibility into the warehouse." },
+  { topic: "Building Shell", term: "Roof load", def: "The weight the roof structure can hold, in PSF. Relevant for hanging equipment (sprinklers, HVAC, conveyors) and rooftop solar. Typical: 30 PSF live load with 5 PSF allowance for hanging equipment. Modern Class A: often 40+ PSF, designed for future solar (~3–4 PSF distributed). Cold storage and e-comm automation: need higher capacity because of hung refrigeration coils and mezzanine conveyors — a real capex item if a 30 PSF roof needs structural reinforcement." },
+
+  // Loading & docks
+  { topic: "Loading & Docks", term: "Dock face", def: "The exterior wall of the building where the dock-high doors are located. Trailers back perpendicular to this wall. The opposite wall might be solid (rear-load) or also have doors (cross-dock). All truck court depth is measured starting from the dock face." },
+  { topic: "Loading & Docks", term: "Dock-high vs. grade-level doors", def: "Dock-high doors are set ~48\" above grade so a trailer can back in and present its bed level with the dock floor. Standard for distribution and modern logistics. Grade-level doors (also called drive-in doors) are at ground level for vehicles to drive directly inside — standard for IOS, contractor yards, last-mile vans, and equipment access. Most modern buildings have predominantly dock-high doors with 1–2 grade-level doors for flexibility. Pure IOS has only grade-level." },
+  { topic: "Loading & Docks", term: "Standard dock height", def: "~48\" above grade. Matches the bed height of a standard 53' dry-van trailer. A few specialty operations (food, automotive) use different heights, but 48\" is universal in distribution." },
+  { topic: "Loading & Docks", term: "Dock door count and ratio", def: "The number of dock doors and how it relates to building size. Standard ratios: cross-dock big-box targets 1 dock door per 5,000 SF. Rear-load big-box targets 1 per 7,500–10,000 SF. Shallow-bay infill is often 1 per 10,000–15,000 SF. Below these ratios, a building is functionally constrained for distribution tenants. Watch out for unequipped vs. equipped doors — a 50-door building with only 30 equipped levelers is really a 30-dock building for most tenants." },
+  { topic: "Loading & Docks", term: "Dock-high vs. grade-level mix", def: "The ratio of dock-high to grade-level doors in a building. Modern Class A distribution: 95%+ dock-high with a couple of grade-level for equipment access. Last-mile / e-commerce fulfillment: sometimes 60–70% dock-high (semi inbound) plus 30–40% grade-level (parcel van outbound). IOS / contractor yards: often 100% grade-level. The mix tells you instantly which tenant universe the building serves." },
+  { topic: "Loading & Docks", term: "Dock equipment spec", def: "What's installed at each dock position. A fully equipped dock includes the door, dock leveler, dock seal or shelter, bumpers, dock light, and dock lock. An unequipped dock is just the door opening and bumpers. Cost difference: a fully equipped dock represents $15K–25K of equipment beyond the structural cost of the door opening. Diligence item: always count both door openings and equipped doors separately." },
+  { topic: "Loading & Docks", term: "Dock leveler", def: "The hydraulic or mechanical platform that bridges the gap between the dock floor and the trailer bed, accommodating trailers of different heights and absorbing the movement as the trailer settles under loading. Mechanical levelers: rated 25K–30K lbs, cheaper, common in older buildings. Hydraulic levelers: rated 35K–50K lbs, smoother operation, standard in modern Class A. Vertical-storing levelers: a newer style that stores vertically in front of the door — used in food-grade and cold storage because it allows the door to fully close, sealing the building." },
+  { topic: "Loading & Docks", term: "Dock seal / dock shelter", def: "The weather seal around the dock door that compresses against the back of the trailer to prevent air and water infiltration during loading. Dock seals are foam-filled fabric pads that the trailer compresses — simpler, cheaper, more common. Dock shelters are larger fabric or rubber curtains that hang in front of the door and the trailer backs through them — better for cold storage and food-grade because they enclose more of the trailer. Watch for tear and compression failure on tour — bad seals are a real energy and pest issue." },
+  { topic: "Loading & Docks", term: "Dock apron", def: "The strip of pavement directly in front of the dock face, typically ~60' deep. Built with thicker reinforced concrete (often 8\"+ with rebar) to handle point loads from trailer landing gear, which can punch through standard asphalt. Diligence item: failed aprons are a six-figure repair on a big building. Look for spalling, cracking around landing-gear contact points, and sunken areas." },
+  { topic: "Loading & Docks", term: "Truck court", def: "The full paved area between the dock face and the property line where trailers maneuver, back in, and park. Heavy-duty pavement (typically 4\" asphalt over 8\" base, or concrete in high-traffic zones)." },
+  { topic: "Loading & Docks", term: "Truck court depth", def: "Distance from dock face to property line. 60': absolute minimum, fits only a backed-in trailer. 130': standard for modern City distribution and mid-bay — backed-in trailer plus drive aisle. 185': Gateway big-box spec — adds a row of stored trailers. 240'+: shared cross-dock courts between two buildings." },
+  { topic: "Loading & Docks", term: "Backed-in trailers", def: "Trailers backed perpendicular to the dock for loading/unloading. A 53' trailer plus tractor adds up to ~65–70' from the dock face. The first 65–70' of any truck court is dedicated to backed-in positions." },
+  { topic: "Loading & Docks", term: "Drive aisle", def: "The clear lane behind the backed-in trailers, ~60' wide, sized for a 53' trailer to circulate and back into trailer storage stalls. Without an aisle, you can't operate the dock and the stored-trailer rows simultaneously." },
+  { topic: "Loading & Docks", term: "Turning radius", def: "The arc a tractor-trailer needs to swing from the drive aisle into a dock or storage stall. A 53' trailer needs roughly 55'–60' of swing room. Tight courts and obstructions (light poles, fire hydrants, drainage features) eat into the effective radius and make stalls unusable. Always sanity-check on a walking tour — paper-spec stalls often don't work in practice." },
+  { topic: "Loading & Docks", term: "Trailer parking", def: "Marked stalls for staged or stored trailers, separate from active dock positions. Standard ratio: 1 trailer stall per 5,000 SF of building for modern Class A big-box. Below that ratio, 3PL and large-shipper tenants pass." },
+  { topic: "Loading & Docks", term: "Truck well", def: "A depressed pavement area in front of a dock door, excavated ~48\" below grade so a trailer can back into it and present its bed level with the building's dock floor. Used when: the building slab is at natural ground level (slab-on-grade). Risk: drainage issues, pavement failure, retaining wall spalling. Diligence item: on older asphalt wells, budget $25K–50K per well for reconstruction." },
+  { topic: "Loading & Docks", term: "Truck ramp", def: "A sloped paved approach that lets a vehicle climb between two elevations. Most common case: a ramp connecting the grade-level truck court to an elevated slab inside the building so equipment can be driven inside via a grade-level door. Also: ramps down to below-grade loading in urban multi-story logistics. Also: yard ramps — portable steel ramps that temporarily convert a grade-level door into a working dock." },
+  { topic: "Loading & Docks", term: "Fully elevated slab", def: "The entire building floor is poured ~48\" above grade, with the dock face becoming a 48\"-tall retaining wall. Trailers back up at natural ground level; the elevated slab inside meets them at trailer-bed height. The modern default for tilt-up industrial since the 1980s — cheaper than excavating wells, cleaner site presentation." },
+  { topic: "Loading & Docks", term: "Stepped or partial elevation", def: "Building has the slab elevated at the dock face but ramps down inside to a grade-level slab in the rear of the building. You see this in: older mid-century industrial, especially retrofitted buildings, and some mixed-loading-type buildings. Drawback: operationally awkward — racking and forklift work suffer on sloped floors." },
+  { topic: "Loading & Docks", term: "Below-grade truck court", def: "The reverse of an elevated slab. Building sits at natural grade, but the entire truck court is depressed by ~48\", with continuous retaining walls. Rare and expensive — usually only on tight infill sites where a continuous elevated dock face was desired. Functionally identical to wells but continuous." },
+  { topic: "Loading & Docks", term: "Drive-through / pull-through / double-loaded", def: "Generic terms for a building with doors on two opposite sides. Drive-through / pull-through specifically implies grade-level doors on both sides — used for vehicle service, contractor operations, equipment storage, freight terminals. Double-loaded is the more generic term and can describe either dock-high or grade-level configurations. None of these are interchangeable with \"cross-dock,\" which specifically means dock-high on both sides." },
+  { topic: "Loading & Docks", term: "Mixed-dock", def: "A building with dock-high doors on one side and grade-level doors on the opposite side. Useful for tenants who receive on semis and ship out via vans or box trucks (e-commerce fulfillment with parcel-carrier outbound)." },
+  { topic: "Loading & Docks", term: "Knock-out panel", def: "A section of the dock face (or any exterior wall) framed during construction to be cut out later for future dock door additions or expansions. Modern Class A construction: typically includes 10–20% extra knock-outs above the day-one dock count to support future tenant flexibility without major structural work." },
+  { topic: "Loading & Docks", term: "Man door", def: "A standard pedestrian door (~3' wide). Not a loading position. Sometimes shown on a dock face spec sheet but doesn't count toward dock door totals." },
+  { topic: "Loading & Docks", term: "Grade-level door", def: "A door at ground level (no well or elevation change) allowing vehicles to drive directly into the warehouse. Standard for: IOS, contractor yards, last-mile vans, and equipment access. Typical size: 12' wide × 14' tall for most uses, 14' × 16' or larger for trucks. Big-box buildings: typically have 1–2 grade-level doors for flexibility, mixed in with dock-high doors." },
+  { topic: "Loading & Docks", term: "Auto parking", def: "Passenger vehicle parking for employees and visitors, physically separate from trailer parking for safety and circulation. Typical zoning requirement: 1 stall per 1,000–2,000 SF of warehouse use, with higher ratios for office. Modern Class A: often adds EV charging at 5–10% of stalls." },
+  { topic: "Loading & Docks", term: "Loading dock equipment \"load rating\"", def: "The weight rating of the dock leveler itself. Mechanical levelers: 25K–30K lbs, fine for standard forklift operation. Hydraulic levelers: 35K–50K lbs, needed for heavier counterbalance forklifts moving full-weight pallets, common in modern Class A and required by some tenants (paper, steel, automotive)." },
+  { topic: "Loading & Docks", term: "Truck turn count per day", def: "How many trucks come through the dock daily — a tenant operational metric, not a physical building feature. Low-throughput tenant: 10–20 trucks/day. Mid-throughput 3PL: 50–100 trucks/day. High-throughput parcel hub or e-commerce fulfillment: 200+ trucks/day. Drives the dock door count, truck court depth, trailer parking ratio, and traffic engineering requirements for the site." },
+
+  // Floor and structural loads
+  { topic: "Floor & Structural Loads", term: "Floor load / slab load capacity", def: "The weight the floor can hold, in pounds per square foot (PSF). Standard logistics: 100–125 PSF (6\"–7\" slab). Modern Class A big-box: 250 PSF (7\"–8\" slab, heavier reinforcement). Manufacturing / heavy industrial: 500+ PSF. Cold storage: 300+ PSF because of densified racking. Hard spec — can't be upgraded without re-pouring the slab." },
+  { topic: "Floor & Structural Loads", term: "Point load / rack-leg load", def: "The concentrated weight a slab can take at a single point — specifically under a rack column leg, on a ~6\" × 6\" plate. Even with adequate PSF, slabs can fail in punching shear under concentrated loads. Modern Class A spec: 250 PSF general floor + 20K–25K lbs rack leg load. Critical for any tenant racking to modern clear heights." },
+  { topic: "Floor & Structural Loads", term: "Wheel load / axle load", def: "The weight a slab takes under a forklift wheel or vehicle axle. Forklifts are heavier than they look — a 5K-capacity forklift weighs 8K–10K lbs empty and 13K–15K lbs loaded, with most weight on the front axle. Usually rolled into floor load discussions but called out separately for heavy lift trucks or drive-in vehicle traffic." },
+
+  // Electrical & power
+  { topic: "Electrical & Power", term: "Power service", def: "Total electrical capacity to the building, expressed in amps and voltage (e.g., 1,200A at 277/480V). The aggregate of how much power can be drawn from the utility. Standard logistics: 400–800A. High-throughput logistics with battery charging: 1,200–2,500A. Cold storage: 2,000–4,000A. Manufacturing: 2,000–6,000+A. Data center / EV charging hub: 10,000+A, often measured in megawatts." },
+  { topic: "Electrical & Power", term: "Three-phase power", def: "The standard commercial/industrial electrical configuration — three alternating-current waveforms delivered together, providing smoother and more efficient power for motors, HVAC, refrigeration, and industrial equipment. Almost all industrial buildings have three-phase service. The relevant detail is the voltage and amperage of the three-phase service. Standard industrial three-phase: 277/480V (used for motors, lighting, HVAC; the 277V is for lighting circuits, 480V for equipment). Heavier industrial three-phase: sometimes 4,160V or higher for large manufacturing or refrigeration. Diligence item: if a building has only single-phase service (rare for industrial, but possible for very old small-bay buildings), it's essentially unusable for modern logistics or manufacturing without a major utility upgrade." },
+  { topic: "Electrical & Power", term: "Electrical load", def: "The power demand the tenant requires from the building's electrical service. Distinct from power service (what's available) — the tenant's load must fit within the building's service. The mismatch between modern tenant electrical needs and older buildings' service capacity is one of the biggest constraints on retrofit and conversion. Utility upgrade timelines run 18–36 months in many markets; costs run into the millions for major upgrades." },
+
+  // Prologis property categories
+  { topic: "Prologis Categories", term: "Gateway distribution", def: "The biggest distribution buildings, near major sea ports or intermodal rail hubs. Typical spec: 36'–40' clear, 50'–60' × 60' column grid, 185'+ truck court, 1 dock door per 5K SF, 1 trailer stall per 5K SF, 250 PSF floor load, ESFR, 1,200A+ power. Typical size: 500K–1M+ SF. Examples of markets: South Dallas, Inland Empire East, Central PA, Savannah/Charleston corridor." },
+  { topic: "Prologis Categories", term: "Multi-market distribution", def: "Same physical spec as Gateway but without port access — sit at highway hubs at the periphery of major metro areas. Typical size: 250K–750K SF. Tenant profile: regional distribution centers serving multi-state catchment areas." },
+  { topic: "Prologis Categories", term: "City distribution", def: "Mid-sized buildings inside urban areas, positioned to deliver same-day or 1–2-day shipping to dense markets. Typical spec: 28'–32' clear, smaller column grid, 100'–130' truck court, more grade-level doors mixed in. Typical size: 100K–250K SF. Tenant profile: same-day delivery operations, regional 3PLs, urban distribution." },
+  { topic: "Prologis Categories", term: "Last Touch", def: "The oldest, smallest, most infill buildings that serve dense affluent populations within minutes. Typical spec: 20'–26' clear, often older construction, mostly grade-level loading, tight truck circulation. Typical size: <100K SF, often <50K SF. Tenant profile: same-day delivery, e-commerce last-mile, urban services. The economic insight: the worst buildings physically, but they reach the most consumer income per SF and command the highest rents in their markets." },
+];
+
+const STORAGE_KEY = "industrial-flashcards-v1";
+
+// State
+let state = {
+  activeTopic: "All",
+  hideKnown: false,
+  index: 0,
+  flipped: false,
+  known: {},   // term -> true
+  review: {},  // term -> true
+  order: [],   // current deck order (indices into CARDS)
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      state.known = saved.known || {};
+      state.review = saved.review || {};
+      state.activeTopic = saved.activeTopic || "All";
+      state.hideKnown = !!saved.hideKnown;
+    }
+  } catch (e) { /* ignore */ }
+}
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      known: state.known,
+      review: state.review,
+      activeTopic: state.activeTopic,
+      hideKnown: state.hideKnown,
+    }));
+  } catch (e) { /* ignore */ }
+}
+
+function getTopics() {
+  const topics = [];
+  const seen = new Set();
+  for (const c of CARDS) {
+    if (!seen.has(c.topic)) { seen.add(c.topic); topics.push(c.topic); }
+  }
+  return topics;
+}
+
+function buildDeck() {
+  // Filter cards by active topic and hideKnown
+  const filtered = [];
+  for (let i = 0; i < CARDS.length; i++) {
+    const c = CARDS[i];
+    if (state.activeTopic !== "All" && c.topic !== state.activeTopic) continue;
+    if (state.hideKnown && state.known[c.term]) continue;
+    filtered.push(i);
+  }
+  state.order = filtered;
+  if (state.index >= state.order.length) state.index = 0;
+}
+
+function shuffleDeck() {
+  for (let i = state.order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [state.order[i], state.order[j]] = [state.order[j], state.order[i]];
+  }
+  state.index = 0;
+  state.flipped = false;
+  render();
+}
+
+function renderChips() {
+  const chipsEl = document.getElementById("topic-chips");
+  chipsEl.innerHTML = "";
+  const topics = ["All", ...getTopics()];
+  for (const t of topics) {
+    const count = t === "All" ? CARDS.length : CARDS.filter(c => c.topic === t).length;
+    const known = t === "All"
+      ? CARDS.filter(c => state.known[c.term]).length
+      : CARDS.filter(c => c.topic === t && state.known[c.term]).length;
+    const chip = document.createElement("div");
+    chip.className = "chip" + (state.activeTopic === t ? " active" : "");
+    chip.innerHTML = `${t}<span class="count">${known}/${count}</span>`;
+    chip.addEventListener("click", () => {
+      state.activeTopic = t;
+      state.index = 0;
+      state.flipped = false;
+      saveState();
+      buildDeck();
+      render();
+    });
+    chipsEl.appendChild(chip);
+  }
+}
+
+function render() {
+  const cardEl = document.getElementById("card");
+  const emptyEl = document.getElementById("empty-state");
+  const stageEl = document.querySelector(".card-stage");
+
+  renderChips();
+
+  // Stats
+  const totalAll = CARDS.length;
+  const knownAll = Object.keys(state.known).filter(k => state.known[k]).length;
+  document.getElementById("stat-deck").textContent = state.order.length;
+  document.getElementById("stat-known").textContent = knownAll;
+  document.getElementById("stat-total").textContent = totalAll;
+
+  if (state.order.length === 0) {
+    stageEl.style.display = "none";
+    document.querySelector(".mark-row").style.display = "none";
+    document.querySelector(".controls").style.display = "none";
+    emptyEl.style.display = "block";
+    document.getElementById("progress-text").textContent = "0 / 0";
+    document.getElementById("progress-fill").style.width = "0%";
+    return;
+  } else {
+    stageEl.style.display = "";
+    document.querySelector(".mark-row").style.display = "";
+    document.querySelector(".controls").style.display = "";
+    emptyEl.style.display = "none";
+  }
+
+  const cardIdx = state.order[state.index];
+  const card = CARDS[cardIdx];
+
+  document.getElementById("front-topic").textContent = card.topic;
+  document.getElementById("back-topic").textContent = card.topic;
+  document.getElementById("term").textContent = card.term;
+  document.getElementById("definition").textContent = card.def;
+
+  if (state.flipped) cardEl.classList.add("flipped");
+  else cardEl.classList.remove("flipped");
+
+  // Progress
+  const pos = state.index + 1;
+  document.getElementById("progress-text").textContent = `${pos} / ${state.order.length}`;
+  document.getElementById("progress-fill").style.width = `${(pos / state.order.length) * 100}%`;
+
+  // Known / review button state
+  const knownBtn = document.getElementById("btn-known");
+  const reviewBtn = document.getElementById("btn-review");
+  knownBtn.classList.toggle("active", !!state.known[card.term]);
+  reviewBtn.classList.toggle("active", !!state.review[card.term]);
+  knownBtn.textContent = state.known[card.term] ? "✓ Known" : "Got it";
+  reviewBtn.textContent = state.review[card.term] ? "Marked to review" : "Need review";
+
+  document.getElementById("hide-known").checked = state.hideKnown;
+}
+
+function flip() {
+  state.flipped = !state.flipped;
+  render();
+}
+
+function next() {
+  if (state.order.length === 0) return;
+  state.flipped = false;
+  state.index = (state.index + 1) % state.order.length;
+  render();
+}
+
+function prev() {
+  if (state.order.length === 0) return;
+  state.flipped = false;
+  state.index = (state.index - 1 + state.order.length) % state.order.length;
+  render();
+}
+
+function markKnown() {
+  if (state.order.length === 0) return;
+  const card = CARDS[state.order[state.index]];
+  if (state.known[card.term]) {
+    delete state.known[card.term];
+  } else {
+    state.known[card.term] = true;
+    delete state.review[card.term];
+  }
+  saveState();
+  // If hiding known and we just marked known, rebuild deck (card disappears)
+  if (state.hideKnown && state.known[card.term]) {
+    buildDeck();
+    if (state.index >= state.order.length) state.index = Math.max(0, state.order.length - 1);
+  }
+  render();
+}
+
+function markReview() {
+  if (state.order.length === 0) return;
+  const card = CARDS[state.order[state.index]];
+  if (state.review[card.term]) {
+    delete state.review[card.term];
+  } else {
+    state.review[card.term] = true;
+    delete state.known[card.term];
+  }
+  saveState();
+  render();
+}
+
+function resetProgress() {
+  if (!confirm("Clear all known/review marks? Your topic filter will stay.")) return;
+  state.known = {};
+  state.review = {};
+  saveState();
+  buildDeck();
+  render();
+}
+
+// Wire up events
+document.getElementById("card").addEventListener("click", flip);
+
+// Touch swipe gestures (mobile): swipe left = next, swipe right = prev
+(function setupSwipe() {
+  const stage = document.querySelector(".card-stage");
+  let startX = 0, startY = 0, startT = 0, tracking = false;
+  const THRESHOLD = 50;        // min horizontal travel to count as a swipe
+  const MAX_VERTICAL = 60;     // ignore if vertical travel exceeds this
+  const MAX_DURATION = 600;    // ms — ignore slow drags
+
+  stage.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY; startT = Date.now();
+    tracking = true;
+  }, { passive: true });
+
+  stage.addEventListener("touchend", (e) => {
+    if (!tracking) return;
+    tracking = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    const dt = Date.now() - startT;
+    if (dt > MAX_DURATION) return;
+    if (Math.abs(dy) > MAX_VERTICAL) return;
+    if (Math.abs(dx) < THRESHOLD) return;
+    // It's a swipe — suppress the click-to-flip that follows
+    e.preventDefault();
+    if (dx < 0) next(); else prev();
+  });
+})();
+document.getElementById("btn-next").addEventListener("click", next);
+document.getElementById("btn-prev").addEventListener("click", prev);
+document.getElementById("btn-known").addEventListener("click", (e) => { e.stopPropagation(); markKnown(); });
+document.getElementById("btn-review").addEventListener("click", (e) => { e.stopPropagation(); markReview(); });
+document.getElementById("btn-shuffle").addEventListener("click", shuffleDeck);
+document.getElementById("btn-reset").addEventListener("click", resetProgress);
+document.getElementById("hide-known").addEventListener("change", (e) => {
+  state.hideKnown = e.target.checked;
+  state.index = 0;
+  state.flipped = false;
+  saveState();
+  buildDeck();
+  render();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (e.code === "Space") { e.preventDefault(); flip(); }
+  else if (e.code === "ArrowRight") { e.preventDefault(); next(); }
+  else if (e.code === "ArrowLeft") { e.preventDefault(); prev(); }
+  else if (e.key === "k" || e.key === "K") { markKnown(); }
+  else if (e.key === "r" || e.key === "R") { markReview(); }
+  else if (e.key === "s" || e.key === "S") { shuffleDeck(); }
+});
+
+// Init
+loadState();
+buildDeck();
+render();
+</script>
+</body>
+</html>
