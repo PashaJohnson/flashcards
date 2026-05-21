@@ -511,6 +511,15 @@ const CARDS = [
   { topic: "Yard & IOS Amenities", term: "Wash bay", def: "A covered area for cleaning vehicles or equipment, with high-pressure water and drainage routed through an oil/water separator (storm runoff not allowed). Tenant profile: trucking, fleet, construction equipment, ready-mix. In IOS: one of the highest-value yard improvements. Cost to build: $75K–250K. Diligence note: confirm the oil/water separator is permitted and maintained." },
   { topic: "Yard & IOS Amenities", term: "Service bay", def: "A drive-in bay for vehicle or equipment repair, with grade-level doors, reinforced slab, and 14'+ clear height. Typical configurations: single-bay, pull-through, or multi-bay for fleet operations. Tenant profile: truck and equipment repair, fleet maintenance, dealerships. In IOS: significant amenity, often paired with a wash bay. Cost to build: $200–400/SF plus equipment." },
   { topic: "Yard & IOS Amenities", term: "Oil/water separator", def: "A below-grade tank or vault that captures oil, fuel, and other hydrocarbons from wash bay or service bay runoff before discharging the water to the sanitary sewer. Typical: gravity-fed concrete or steel vault with baffles that let oil float to the top while clean water exits the bottom. Required by code: anywhere vehicles are washed, fueled, or serviced — discharge to storm sewer is prohibited. Maintenance: needs pumping every 3–12 months depending on use; $500–2,000 per service. Diligence note: failed or unpermitted separators are an environmental liability and a code violation; confirm the unit is properly sized, permitted, and has a current maintenance log." },
+  { topic: "Yard & IOS Amenities", term: "Sand pit", def: "A bermed or contained area filled with sand, used as a soft-landing zone for unloading heavy or fragile materials (pipe, structural steel, equipment dropped from cranes) or for capturing fluid runoff during equipment maintenance. Typical: 20'–40' across with railroad-tie or concrete curbs and graded drainage to a sump. Tenant profile: pipe yards, oilfield services, scrap metal, heavy equipment dealers. In IOS: legacy feature on older yards; rarely added new but a real amenity for the right tenant. Diligence note: check if it functions as a de facto drainage feature — contaminated sand can be a hazmat disposal issue." },
+  { topic: "Yard & IOS Amenities", term: "Oil tank (AST/UST)", def: "An aboveground or underground storage tank for motor oil, hydraulic fluid, used oil, or lubricants. Typical: 250–1,000 gallons aboveground (double-walled steel or poly with secondary containment) or 1,000–10,000 gallons underground (fiberglass, with monitoring wells). Required: SPCC plan if site aggregate exceeds 1,320 gallons. In IOS: common on service-bay and fleet-maintenance properties. Diligence note: USTs are a Phase II ESA trigger — confirm permit status, age, and tightness test history; closed-in-place tanks can still create recognized environmental conditions." },
+  { topic: "Yard & IOS Amenities", term: "Air compressor", def: "A mechanical unit that pressurizes ambient air for distribution through air lines to pneumatic tools, lifts, and equipment. Typical: 5–25 HP single-stage for shop use; 25–100 HP two-stage rotary screw for heavy fleet operations. Storage tank: 60–240 gallon receiver tank. Tenant profile: truck/equipment maintenance, body shops, manufacturing. In IOS: often paired with service bays and wash bays. Diligence note: tank requires annual inspection and 10-year hydrostatic test under ASME pressure vessel code; verify cert is current." },
+  { topic: "Yard & IOS Amenities", term: "Air lines", def: "Hard-piped pneumatic distribution running from a central compressor to drops throughout a building or yard, supplying compressed air to tools and equipment. Typical: black iron or copper piping, 3/4\"–1.5\" diameter, with quick-connect drops every 20–40' along walls and at workstations. Tenant profile: maintenance, fabrication, body shops, tire service. In IOS: extending air lines into the yard or under canopies is a high-value tenant amenity for outdoor equipment work. Diligence note: older black-iron systems develop pinhole leaks and rust scale — pressure-test on diligence." },
+  { topic: "Yard & IOS Amenities", term: "Fuel tank", def: "An aboveground or underground tank storing diesel, gasoline, propane, or natural gas for on-site fleet fueling. Typical: 500–2,000 gallon AST (double-walled with overfill prevention and emergency shutoff) or 4,000–12,000 gallon UST (fiberglass with leak monitoring). Required: SPCC plan, fire department permit, EPA tank registration. Tenant profile: trucking, fleet operators, construction equipment, ready-mix. In IOS: a fueling island is a major amenity that can drive 15–25% rent premium for fleet tenants. Diligence note: full Phase II ESA scope including soil and groundwater sampling." },
+  { topic: "Yard & IOS Amenities", term: "Jib crane", def: "A wall- or column-mounted lifting device with a horizontal swing arm that rotates 180°–360° around a vertical post, used to lift loads within a defined work area. Typical capacity: 500 lbs–5 tons; typical reach: 8'–20'. Tenant profile: fabrication shops, machine shops, service bays loading heavy parts onto vehicles. In IOS: common in attached shop buildings; localized lifting solution that doesn't require full overhead crane infrastructure. Cost to install: $5K–25K. Diligence note: annual OSHA inspection required; check that the supporting structure is rated for the load." },
+  { topic: "Yard & IOS Amenities", term: "Overhead bridge crane", def: "A lifting system consisting of a bridge beam that travels along two parallel runways mounted to the building structure, with a hoist that traverses the bridge — giving full coverage of the bay floor below. Typical capacity: 1–25 tons (light fabrication) up to 100+ tons (heavy manufacturing). Tenant profile: steel fabrication, heavy equipment manufacturing, large machine shops. In IOS: found in larger attached shop buildings; major asset for heavy-equipment tenants. Diligence note: requires structural columns rated for crane loads; building must have proper power supply (typically 480V three-phase) and runway alignment certification." },
+  { topic: "Yard & IOS Amenities", term: "Gantry crane", def: "A lifting system similar to a bridge crane but supported by its own freestanding legs that run on floor-mounted or ground-level rails, rather than mounting to building structure. Typical capacity: 1–50 tons; can be indoor (rolling on rails) or outdoor (rubber-tired). Tenant profile: shipyards, pipe yards, steel service centers, container handling. In IOS: outdoor gantry cranes are a real differentiator — the yard becomes a heavy-handling operation. Diligence note: outdoor units need protected rail bed; check rail alignment, wheel wear, and structural condition." },
+  { topic: "Yard & IOS Amenities", term: "Monorail crane", def: "A single-rail overhead lifting system where a hoist trolley travels along one fixed beam (no bridge), typically following a defined path between work stations. Typical capacity: 500 lbs–10 tons. Configuration: straight runs, curves, or switches that route loads through a process flow. Tenant profile: assembly operations, slaughterhouses, foundries, repetitive parts handling. In IOS: less common than jib or bridge cranes; signals a building purpose-built for a specific industrial process. Diligence note: purpose-built systems may not fit a future tenant's workflow — verify how transferable the layout is." },
 
   // Prologis property categories
   { topic: "Prologis Categories", term: "Gateway distribution", def: "The biggest distribution buildings, near major sea ports or intermodal rail hubs. Typical spec: 36'–40' clear, 50'–60' × 60' column grid, 185'+ truck court, 1 dock door per 5K SF, 1 trailer stall per 5K SF, 250 PSF floor load, ESFR, 1,200A+ power. Typical size: 500K–1M+ SF. Examples of markets: South Dallas, Inland Empire East, Central PA, Savannah/Charleston corridor." },
@@ -621,173 +630,3 @@ function render() {
   // Stats
   const totalAll = CARDS.length;
   const knownAll = Object.keys(state.known).filter(k => state.known[k]).length;
-  document.getElementById("stat-deck").textContent = state.order.length;
-  document.getElementById("stat-known").textContent = knownAll;
-  document.getElementById("stat-total").textContent = totalAll;
-
-  if (state.order.length === 0) {
-    stageEl.style.display = "none";
-    document.querySelector(".mark-row").style.display = "none";
-    document.querySelector(".controls").style.display = "none";
-    emptyEl.style.display = "block";
-    document.getElementById("progress-text").textContent = "0 / 0";
-    document.getElementById("progress-fill").style.width = "0%";
-    return;
-  } else {
-    stageEl.style.display = "";
-    document.querySelector(".mark-row").style.display = "";
-    document.querySelector(".controls").style.display = "";
-    emptyEl.style.display = "none";
-  }
-
-  const cardIdx = state.order[state.index];
-  const card = CARDS[cardIdx];
-
-  document.getElementById("front-topic").textContent = card.topic;
-  document.getElementById("back-topic").textContent = card.topic;
-  document.getElementById("term").textContent = card.term;
-  document.getElementById("definition").textContent = card.def;
-
-  if (state.flipped) cardEl.classList.add("flipped");
-  else cardEl.classList.remove("flipped");
-
-  // Progress
-  const pos = state.index + 1;
-  document.getElementById("progress-text").textContent = `${pos} / ${state.order.length}`;
-  document.getElementById("progress-fill").style.width = `${(pos / state.order.length) * 100}%`;
-
-  // Known / review button state
-  const knownBtn = document.getElementById("btn-known");
-  const reviewBtn = document.getElementById("btn-review");
-  knownBtn.classList.toggle("active", !!state.known[card.term]);
-  reviewBtn.classList.toggle("active", !!state.review[card.term]);
-  knownBtn.textContent = state.known[card.term] ? "✓ Known" : "Got it";
-  reviewBtn.textContent = state.review[card.term] ? "Marked to review" : "Need review";
-
-  document.getElementById("hide-known").checked = state.hideKnown;
-}
-
-function flip() {
-  state.flipped = !state.flipped;
-  render();
-}
-
-function next() {
-  if (state.order.length === 0) return;
-  state.flipped = false;
-  state.index = (state.index + 1) % state.order.length;
-  render();
-}
-
-function prev() {
-  if (state.order.length === 0) return;
-  state.flipped = false;
-  state.index = (state.index - 1 + state.order.length) % state.order.length;
-  render();
-}
-
-function markKnown() {
-  if (state.order.length === 0) return;
-  const card = CARDS[state.order[state.index]];
-  if (state.known[card.term]) {
-    delete state.known[card.term];
-  } else {
-    state.known[card.term] = true;
-    delete state.review[card.term];
-  }
-  saveState();
-  // If hiding known and we just marked known, rebuild deck (card disappears)
-  if (state.hideKnown && state.known[card.term]) {
-    buildDeck();
-    if (state.index >= state.order.length) state.index = Math.max(0, state.order.length - 1);
-  }
-  render();
-}
-
-function markReview() {
-  if (state.order.length === 0) return;
-  const card = CARDS[state.order[state.index]];
-  if (state.review[card.term]) {
-    delete state.review[card.term];
-  } else {
-    state.review[card.term] = true;
-    delete state.known[card.term];
-  }
-  saveState();
-  render();
-}
-
-function resetProgress() {
-  if (!confirm("Clear all known/review marks? Your topic filter will stay.")) return;
-  state.known = {};
-  state.review = {};
-  saveState();
-  buildDeck();
-  render();
-}
-
-// Wire up events
-document.getElementById("card").addEventListener("click", flip);
-
-// Touch swipe gestures (mobile): swipe left = next, swipe right = prev
-(function setupSwipe() {
-  const stage = document.querySelector(".card-stage");
-  let startX = 0, startY = 0, startT = 0, tracking = false;
-  const THRESHOLD = 50;        // min horizontal travel to count as a swipe
-  const MAX_VERTICAL = 60;     // ignore if vertical travel exceeds this
-  const MAX_DURATION = 600;    // ms — ignore slow drags
-
-  stage.addEventListener("touchstart", (e) => {
-    if (e.touches.length !== 1) return;
-    const t = e.touches[0];
-    startX = t.clientX; startY = t.clientY; startT = Date.now();
-    tracking = true;
-  }, { passive: true });
-
-  stage.addEventListener("touchend", (e) => {
-    if (!tracking) return;
-    tracking = false;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - startX;
-    const dy = t.clientY - startY;
-    const dt = Date.now() - startT;
-    if (dt > MAX_DURATION) return;
-    if (Math.abs(dy) > MAX_VERTICAL) return;
-    if (Math.abs(dx) < THRESHOLD) return;
-    // It's a swipe — suppress the click-to-flip that follows
-    e.preventDefault();
-    if (dx < 0) next(); else prev();
-  });
-})();
-document.getElementById("btn-next").addEventListener("click", next);
-document.getElementById("btn-prev").addEventListener("click", prev);
-document.getElementById("btn-known").addEventListener("click", (e) => { e.stopPropagation(); markKnown(); });
-document.getElementById("btn-review").addEventListener("click", (e) => { e.stopPropagation(); markReview(); });
-document.getElementById("btn-shuffle").addEventListener("click", shuffleDeck);
-document.getElementById("btn-reset").addEventListener("click", resetProgress);
-document.getElementById("hide-known").addEventListener("change", (e) => {
-  state.hideKnown = e.target.checked;
-  state.index = 0;
-  state.flipped = false;
-  saveState();
-  buildDeck();
-  render();
-});
-
-document.addEventListener("keydown", (e) => {
-  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-  if (e.code === "Space") { e.preventDefault(); flip(); }
-  else if (e.code === "ArrowRight") { e.preventDefault(); next(); }
-  else if (e.code === "ArrowLeft") { e.preventDefault(); prev(); }
-  else if (e.key === "k" || e.key === "K") { markKnown(); }
-  else if (e.key === "r" || e.key === "R") { markReview(); }
-  else if (e.key === "s" || e.key === "S") { shuffleDeck(); }
-});
-
-// Init
-loadState();
-buildDeck();
-render();
-</script>
-</body>
-</html>
