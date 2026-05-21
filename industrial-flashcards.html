@@ -630,3 +630,173 @@ function render() {
   // Stats
   const totalAll = CARDS.length;
   const knownAll = Object.keys(state.known).filter(k => state.known[k]).length;
+  document.getElementById("stat-deck").textContent = state.order.length;
+  document.getElementById("stat-known").textContent = knownAll;
+  document.getElementById("stat-total").textContent = totalAll;
+
+  if (state.order.length === 0) {
+    stageEl.style.display = "none";
+    document.querySelector(".mark-row").style.display = "none";
+    document.querySelector(".controls").style.display = "none";
+    emptyEl.style.display = "block";
+    document.getElementById("progress-text").textContent = "0 / 0";
+    document.getElementById("progress-fill").style.width = "0%";
+    return;
+  } else {
+    stageEl.style.display = "";
+    document.querySelector(".mark-row").style.display = "";
+    document.querySelector(".controls").style.display = "";
+    emptyEl.style.display = "none";
+  }
+
+  const cardIdx = state.order[state.index];
+  const card = CARDS[cardIdx];
+
+  document.getElementById("front-topic").textContent = card.topic;
+  document.getElementById("back-topic").textContent = card.topic;
+  document.getElementById("term").textContent = card.term;
+  document.getElementById("definition").textContent = card.def;
+
+  if (state.flipped) cardEl.classList.add("flipped");
+  else cardEl.classList.remove("flipped");
+
+  // Progress
+  const pos = state.index + 1;
+  document.getElementById("progress-text").textContent = `${pos} / ${state.order.length}`;
+  document.getElementById("progress-fill").style.width = `${(pos / state.order.length) * 100}%`;
+
+  // Known / review button state
+  const knownBtn = document.getElementById("btn-known");
+  const reviewBtn = document.getElementById("btn-review");
+  knownBtn.classList.toggle("active", !!state.known[card.term]);
+  reviewBtn.classList.toggle("active", !!state.review[card.term]);
+  knownBtn.textContent = state.known[card.term] ? "✓ Known" : "Got it";
+  reviewBtn.textContent = state.review[card.term] ? "Marked to review" : "Need review";
+
+  document.getElementById("hide-known").checked = state.hideKnown;
+}
+
+function flip() {
+  state.flipped = !state.flipped;
+  render();
+}
+
+function next() {
+  if (state.order.length === 0) return;
+  state.flipped = false;
+  state.index = (state.index + 1) % state.order.length;
+  render();
+}
+
+function prev() {
+  if (state.order.length === 0) return;
+  state.flipped = false;
+  state.index = (state.index - 1 + state.order.length) % state.order.length;
+  render();
+}
+
+function markKnown() {
+  if (state.order.length === 0) return;
+  const card = CARDS[state.order[state.index]];
+  if (state.known[card.term]) {
+    delete state.known[card.term];
+  } else {
+    state.known[card.term] = true;
+    delete state.review[card.term];
+  }
+  saveState();
+  // If hiding known and we just marked known, rebuild deck (card disappears)
+  if (state.hideKnown && state.known[card.term]) {
+    buildDeck();
+    if (state.index >= state.order.length) state.index = Math.max(0, state.order.length - 1);
+  }
+  render();
+}
+
+function markReview() {
+  if (state.order.length === 0) return;
+  const card = CARDS[state.order[state.index]];
+  if (state.review[card.term]) {
+    delete state.review[card.term];
+  } else {
+    state.review[card.term] = true;
+    delete state.known[card.term];
+  }
+  saveState();
+  render();
+}
+
+function resetProgress() {
+  if (!confirm("Clear all known/review marks? Your topic filter will stay.")) return;
+  state.known = {};
+  state.review = {};
+  saveState();
+  buildDeck();
+  render();
+}
+
+// Wire up events
+document.getElementById("card").addEventListener("click", flip);
+
+// Touch swipe gestures (mobile): swipe left = next, swipe right = prev
+(function setupSwipe() {
+  const stage = document.querySelector(".card-stage");
+  let startX = 0, startY = 0, startT = 0, tracking = false;
+  const THRESHOLD = 50;        // min horizontal travel to count as a swipe
+  const MAX_VERTICAL = 60;     // ignore if vertical travel exceeds this
+  const MAX_DURATION = 600;    // ms — ignore slow drags
+
+  stage.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY; startT = Date.now();
+    tracking = true;
+  }, { passive: true });
+
+  stage.addEventListener("touchend", (e) => {
+    if (!tracking) return;
+    tracking = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    const dt = Date.now() - startT;
+    if (dt > MAX_DURATION) return;
+    if (Math.abs(dy) > MAX_VERTICAL) return;
+    if (Math.abs(dx) < THRESHOLD) return;
+    // It's a swipe — suppress the click-to-flip that follows
+    e.preventDefault();
+    if (dx < 0) next(); else prev();
+  });
+})();
+document.getElementById("btn-next").addEventListener("click", next);
+document.getElementById("btn-prev").addEventListener("click", prev);
+document.getElementById("btn-known").addEventListener("click", (e) => { e.stopPropagation(); markKnown(); });
+document.getElementById("btn-review").addEventListener("click", (e) => { e.stopPropagation(); markReview(); });
+document.getElementById("btn-shuffle").addEventListener("click", shuffleDeck);
+document.getElementById("btn-reset").addEventListener("click", resetProgress);
+document.getElementById("hide-known").addEventListener("change", (e) => {
+  state.hideKnown = e.target.checked;
+  state.index = 0;
+  state.flipped = false;
+  saveState();
+  buildDeck();
+  render();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (e.code === "Space") { e.preventDefault(); flip(); }
+  else if (e.code === "ArrowRight") { e.preventDefault(); next(); }
+  else if (e.code === "ArrowLeft") { e.preventDefault(); prev(); }
+  else if (e.key === "k" || e.key === "K") { markKnown(); }
+  else if (e.key === "r" || e.key === "R") { markReview(); }
+  else if (e.key === "s" || e.key === "S") { shuffleDeck(); }
+});
+
+// Init
+loadState();
+buildDeck();
+render();
+</script>
+</body>
+</html>
