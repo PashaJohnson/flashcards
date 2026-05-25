@@ -109,34 +109,75 @@
     margin-bottom: 20px;
     box-shadow: var(--shadow);
   }
-  .topic-chips {
+  .toolbar-row {
     display: flex;
+    gap: 14px;
+    align-items: stretch;
     flex-wrap: wrap;
-    gap: 8px;
   }
-  .chip {
+  .toolbar-control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .toolbar-control.grow { flex: 1; min-width: 200px; }
+  .toolbar-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+  }
+  .select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 36px 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text);
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3 4.5l3 3 3-3' stroke='%23555a66' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    width: 100%;
+    transition: border-color 0.15s ease;
+  }
+  .select:hover { border-color: var(--border-strong); }
+  .select:focus { outline: none; border-color: var(--accent); }
+  .segmented {
+    display: inline-flex;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    gap: 2px;
+    align-self: stretch;
+  }
+  .seg-btn {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 16px;
     font-size: 13px;
     font-weight: 500;
+    font-family: inherit;
     color: var(--text-soft);
     cursor: pointer;
     transition: all 0.15s ease;
-    user-select: none;
+    flex: 1;
+    white-space: nowrap;
   }
-  .chip:hover { border-color: var(--border-strong); color: var(--text); }
-  .chip.active {
+  .seg-btn:hover { color: var(--text); }
+  .seg-btn.active {
     background: var(--accent);
-    border-color: var(--accent);
     color: #fff;
-  }
-  .chip .count {
-    margin-left: 6px;
-    opacity: 0.7;
-    font-weight: 400;
-    font-size: 12px;
+    font-weight: 600;
   }
 
   .card-stage {
@@ -345,7 +386,12 @@
     .title-block p { font-size: 13px; }
     .stat-pill { padding: 6px 10px; font-size: 12px; }
     .toolbar { padding: 10px; margin-bottom: 14px; }
-    .chip { padding: 7px 12px; font-size: 12px; }
+    .toolbar-row { gap: 10px; }
+    .toolbar-control.grow { flex: 1 1 100%; min-width: 0; }
+    .toolbar-control:not(.grow) { flex: 1 1 100%; }
+    .segmented { width: 100%; }
+    .select { font-size: 16px; padding: 12px 36px 12px 14px; }
+    .seg-btn { padding: 10px 16px; font-size: 14px; min-height: 44px; }
     .face { padding: 24px 20px; }
     .card { min-height: 340px; }
     .term-text { font-size: 26px; }
@@ -381,7 +427,19 @@
   </header>
 
   <div class="toolbar">
-    <div class="topic-chips" id="topic-chips"></div>
+    <div class="toolbar-row">
+      <div class="toolbar-control grow">
+        <span class="toolbar-label">Topic</span>
+        <select id="topic-select" class="select" aria-label="Filter by topic"></select>
+      </div>
+      <div class="toolbar-control">
+        <span class="toolbar-label">Start side</span>
+        <div class="segmented" id="side-toggle" role="group" aria-label="Choose which side of the card shows first">
+          <button class="seg-btn" type="button" data-side="term">Term</button>
+          <button class="seg-btn" type="button" data-side="definition">Definition</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="card-stage">
@@ -521,6 +579,69 @@ const CARDS = [
   { topic: "Yard & IOS Amenities", term: "Gantry crane", def: "A lifting system similar to a bridge crane but supported by its own freestanding legs that run on floor-mounted or ground-level rails, rather than mounting to building structure. Typical capacity: 1–50 tons; can be indoor (rolling on rails) or outdoor (rubber-tired). Tenant profile: shipyards, pipe yards, steel service centers, container handling. In IOS: outdoor gantry cranes are a real differentiator — the yard becomes a heavy-handling operation. Diligence note: outdoor units need protected rail bed; check rail alignment, wheel wear, and structural condition." },
   { topic: "Yard & IOS Amenities", term: "Monorail crane", def: "A single-rail overhead lifting system where a hoist trolley travels along one fixed beam (no bridge), typically following a defined path between work stations. Typical capacity: 500 lbs–10 tons. Configuration: straight runs, curves, or switches that route loads through a process flow. Tenant profile: assembly operations, slaughterhouses, foundries, repetitive parts handling. In IOS: less common than jib or bridge cranes; signals a building purpose-built for a specific industrial process. Diligence note: purpose-built systems may not fit a future tenant's workflow — verify how transferable the layout is." },
 
+  // Yard Surfaces
+  { topic: "Yard Surfaces", term: "Native / Dirt", def: "Unimproved natural ground. Cheapest surface but poor load-bearing, drainage, and dust control. Typically found on un-leased yards or low-rent uses like cold storage of pipe or idle equipment." },
+  { topic: "Yard Surfaces", term: "Road Base (ABC / CAB)", def: "Also: Aggregate Base Course / ABC / Crushed Aggregate Base / CAB. Engineered mix of crushed angular stone and fines, compacted to spec. Binds tightly when compacted to form an all-weather surface. The workhorse unpaved IOS surface for trailer and container storage." },
+  { topic: "Yard Surfaces", term: "Class 2 Aggregate Base (Caltrans spec)", def: "California's standard road base spec. Crushed rock with fines, ¾\" or 1½\" maximum aggregate size. Required for most municipal IOS yard improvements in CA. Equivalent specs exist in other states." },
+  { topic: "Yard Surfaces", term: "Type I Aggregate Base", def: "ASTM/AASHTO classification for the highest-quality crushed stone base — 100% crushed virgin rock, tight gradation, highest load-bearing. Most expensive, used where load specs are critical." },
+  { topic: "Yard Surfaces", term: "Type II Aggregate Base", def: "Slightly less stringent than Type I; allows some uncrushed/rounded particles. Most common road base spec for IOS yards — balances cost and performance." },
+  { topic: "Yard Surfaces", term: "Type III Aggregate Base", def: "Lower-grade base allowing recycled materials (crushed concrete, RAP) blended with virgin aggregate. Cheaper, acceptable for lighter-duty yards and sub-base applications." },
+  { topic: "Yard Surfaces", term: "DG (Decomposed Granite)", def: "Naturally weathered granite that breaks down into fine angular particles. Compacts to a semi-stable surface. Common in the Southwest (Phoenix, SoCal, Vegas) where locally sourced. Cheaper than road base but lower load capacity — better for light vehicle/equipment storage than heavy trailers." },
+  { topic: "Yard Surfaces", term: "Gravel", def: "Uniform-sized rounded or angular stone with no fines. Drains well but doesn't compact — wheels push it around. Best as a top dressing or drainage application, not a primary load surface." },
+  { topic: "Yard Surfaces", term: "Crushed Concrete (RCA)", def: "Recycled Concrete Aggregate. Demolished concrete crushed and screened to base-course gradation. Performs similarly to virgin road base at lower cost. Common in cost-conscious markets and where demo material is locally available." },
+  { topic: "Yard Surfaces", term: "RAP (Reclaimed Asphalt Pavement / Millings)", def: "Recycled/Reclaimed Asphalt Pavement, also called \"millings.\" Ground-up old asphalt. Residual binder causes it to re-compact and \"knit\" over time, performing like a low-grade asphalt surface. Popular IOS surface — cheap, durable, sheds water well." },
+  { topic: "Yard Surfaces", term: "Caliche", def: "Naturally cemented calcium carbonate hardpan, common in Phoenix, Vegas, and Tucson. Sometimes used as a base material when locally available; can be a free or near-free surface if already on-site." },
+  { topic: "Yard Surfaces", term: "Crusher Run (Crush-and-Run / QP)", def: "Also: \"Crush-and-Run\" / Quarry Process / QP. East Coast / Southeast term for crushed stone with fines. Roughly equivalent to West Coast road base. Compacts hard." },
+  { topic: "Yard Surfaces", term: "Chip Seal (Tar-and-Chip)", def: "Low-grade paved surface — sprayed liquid asphalt with crushed stone rolled into it. A step up from compacted base, step down from full asphalt. Used as a budget-friendly \"paved\" yard." },
+
+  // Industrial Uses
+  { topic: "Industrial Uses", term: "Machine Shop", def: "Industrial facility that uses machine tools (lathes, mills, drills, CNC equipment, grinders) to cut, shape, and finish metal or other materials into precision parts. Typically a job-shop model — produces custom or small-batch components to client specs rather than mass-produced goods. Power-intensive (often 480V 3-phase), requires reinforced floors for heavy equipment, generates metal chips/coolant waste. Tenant profile: small-to-mid contractors, aerospace/defense subcontractors, oil & gas service shops." },
+  { topic: "Industrial Uses", term: "Fabricator (Metal Fabrication Shop)", def: "Facility that cuts, bends, welds, and assembles raw metal stock (sheet, plate, tube, structural shapes) into larger finished structures or components — e.g., steel beams, tanks, railings, equipment frames, ductwork. Distinguished from a machine shop by working at larger scale with less precision tolerance: more welding, cutting, and forming; less precision machining. Often requires high clear heights, overhead cranes, large roll-up doors, and yard space for material/product staging — making fabricators a natural IOS-adjacent tenant." },
+  { topic: "Industrial Uses", term: "Assembly", def: "Manufacturing process (and facility type) where pre-made components are combined into a finished product. Pure assembly operations do little to no raw-material processing — they receive parts from upstream suppliers and put them together (e.g., furniture assembly, electronics, vehicle final assembly, packaged equipment). Generally lighter industrial use: less power, less waste, lower floor loads than machining or fabrication. Often uses conveyor lines or workstation layouts. Common tenant for flex/light industrial space." },
+  { topic: "Industrial Uses", term: "Foundry", def: "Heavy industrial facility that melts metal and pours it into molds to produce castings (engine blocks, pipe fittings, industrial components). Among the most intensive industrial uses — extreme heat, heavy power demand, air emissions, sand/slag waste, specialized ventilation, and significant environmental permitting. Typically located in heavy industrial zones, often with grandfathered entitlements. Rarely a fit for typical IOS or light industrial product; relevant mostly as a neighboring use or for understanding heavy industrial zoning." },
+  { topic: "Industrial Uses", term: "Process Manufacturing", def: "Manufacturing model where products are made by combining ingredients or raw materials according to a formula or recipe — and once combined, can't be broken back down into their original components. Output is typically bulk or continuous (liquids, gases, powders, chemicals, food, pharmaceuticals, petroleum products) rather than discrete units. Contrasts with discrete manufacturing (assembly of countable parts — cars, electronics, furniture). Process facilities tend to be highly specialized real estate: tanks, piping, clean rooms, hazmat permitting — generally not interchangeable with standard industrial space." },
+
+  // Lighting
+  { topic: "Lighting", term: "Pole-Mounted Lighting", def: "Tall freestanding light poles (typically 20'–40' high) used to illuminate yards, parking, and truck courts. Standard for IOS sites. Higher poles cover more area but face more zoning restrictions (height limits, shielding to prevent light spillover onto neighboring properties). Modern installs use LED heads with shoebox or floodlight fixtures." },
+  { topic: "Lighting", term: "Wall Pack", def: "Light fixture mounted directly to the exterior wall of a building, typically over dock doors, man doors, and along building perimeters. Provides close-in security and task lighting. Cheaper than pole lights but limited coverage. Often the first lighting tenants ask to add or upgrade." },
+  { topic: "Lighting", term: "LED Retrofit", def: "Replacing legacy lighting (metal halide, high-pressure sodium, fluorescent) with LED fixtures. A common value-add CapEx item — reduces energy costs 50–70%, improves light quality and uniformity, and often qualifies for utility rebates. Frequently bundled into IOS reposition scopes alongside paving and fencing." },
+  { topic: "Lighting", term: "Foot-Candle (fc)", def: "Standard unit of light intensity measured at a surface — one lumen per square foot. Used to spec yard and warehouse lighting. Typical benchmarks: IOS yards 1–5 fc; truck courts 3–5 fc; security-sensitive areas 5–10 fc; warehouse interiors 20–50 fc. Tenant leases and insurance policies sometimes specify minimum fc levels." },
+
+  // Stormwater
+  { topic: "Stormwater", term: "SWPPP", def: "Storm Water Pollution Prevention Plan. Site-specific written plan required during construction (and sometimes operation) describing how a property will prevent pollutants from entering stormwater runoff. Mandated under NPDES for sites disturbing ≥1 acre. Includes BMPs (best management practices), inspection schedules, and reporting. Failure to maintain compliance triggers fines and can stall construction draws." },
+  { topic: "Stormwater", term: "NPDES", def: "National Pollutant Discharge Elimination System. Federal Clean Water Act permitting program (administered by EPA and delegated state agencies) regulating discharges of pollutants into U.S. waters. Industrial sites typically need an NPDES permit for both construction activity and ongoing industrial stormwater discharge. Key compliance burden for IOS — yard runoff carries contaminants (fuel, oil, sediment) that must be managed." },
+  { topic: "Stormwater", term: "Retention Basin", def: "Stormwater feature that permanently holds water — captures runoff and releases it slowly via evaporation and infiltration. Has a permanent pool. Takes up usable land but provides treatment via settling and biological action." },
+  { topic: "Stormwater", term: "Detention Basin", def: "Stormwater feature that temporarily holds runoff during storms and releases it via a controlled outlet, then drains dry. No permanent pool. More common than retention basins on IOS sites because it requires less land area and can sometimes be combined with truck/trailer storage (rare but possible)." },
+  { topic: "Stormwater", term: "Bio-Swale", def: "Vegetated, gently sloped channel designed to slow, filter, and infiltrate stormwater as it flows across the surface. Used along yard perimeters, parking edges, and between paved areas. A \"green infrastructure\" alternative to traditional curb-and-gutter drainage. Often required by modern stormwater codes in CA, CO, WA." },
+
+  // Site Protection
+  { topic: "Site Protection", term: "Bollard", def: "Short, sturdy vertical post (usually steel pipe filled with concrete) installed to protect buildings, equipment, fire risers, utilities, and pedestrian areas from vehicle impact. Standard around dock doors, building corners, fuel tanks, and electrical equipment. Concrete-filled steel pipe bollards are the IOS standard; removable and decorative variants exist." },
+  { topic: "Site Protection", term: "Wheel Stop", def: "Precast concrete (or rubber/recycled plastic) block placed at the head of a parking stall to prevent vehicles from rolling forward into walls, landscaping, or adjacent stalls. Individual to each stall. Cheaper and more flexible than continuous curbing but can be a tripping hazard and shift over time." },
+  { topic: "Site Protection", term: "Curbing", def: "Continuous concrete edge along a parking area, drive aisle, or landscape boundary. Defines circulation, channels stormwater, and protects landscaping. More expensive to install than wheel stops but more durable and lower maintenance. Required by many municipal landscape codes." },
+
+  // Freight & Logistics
+  { topic: "Freight & Logistics", term: "3PL (Third-Party Logistics)", def: "Outsourced provider that executes logistics functions on behalf of a shipper — typically warehousing, fulfillment, transportation, and inventory management. 3PLs operate the physical assets (warehouses, trucks, labor) using the client's products. Major IOS-adjacent tenant category. Examples: NFI, DHL Supply Chain, GXO, Saia, XPO." },
+  { topic: "Freight & Logistics", term: "4PL (Fourth-Party Logistics)", def: "Asset-light logistics provider that manages an entire supply chain on behalf of a shipper — typically orchestrating multiple 3PLs, carriers, and technology platforms. Doesn't own warehouses or trucks; provides strategic oversight, technology, and management. Less common as a real estate tenant — they're the layer above the physical operators." },
+  { topic: "Freight & Logistics", term: "LTL (Less-Than-Truckload)", def: "Freight shipping mode for loads too small to fill a full trailer (typically 150–15,000 lbs). Multiple shippers' freight is consolidated in a single trailer, routed through terminal networks with sortation hubs. LTL carriers (Old Dominion, Saia, XPO, Estes, FedEx Freight) require cross-dock terminals — distinct real estate product with many small dock doors on both sides." },
+  { topic: "Freight & Logistics", term: "FTL (Full Truckload)", def: "Freight shipping mode where one shipper fills an entire trailer with goods going to one destination. Faster and cheaper per pound than LTL for large loads. FTL doesn't require sortation infrastructure — drives demand for trailer parking, drop yards, and standard distribution warehouses." },
+  { topic: "Freight & Logistics", term: "Drayage", def: "Short-haul trucking that moves shipping containers between ports/rail yards and nearby warehouses or transload facilities — typically within a 50-mile radius. Drayage operators are core IOS tenants: they need yard space to park tractors, store empty/loaded containers, and stage chassis. Demand drivers around major ports (LA/Long Beach, Oakland, Seattle/Tacoma, Savannah)." },
+  { topic: "Freight & Logistics", term: "Intermodal", def: "Freight transportation using two or more modes (truck, rail, ship) with goods moving in the same container throughout — no rehandling of contents. Containers transfer between modes at intermodal facilities (rail ramps, ports). Drives demand for IOS near intermodal ramps (BNSF, UP) — drayage operators and container yards cluster nearby." },
+  { topic: "Freight & Logistics", term: "Reefer (Refrigerated Trailer)", def: "Insulated trailer with a self-contained refrigeration unit, used to transport temperature-sensitive freight (food, pharma, flowers). \"Reefer plug-ins\" or \"reefer outlets\" are electrical hookups in yards that power parked reefers — a specialized IOS amenity that commands premium rents from food and pharma tenants." },
+  { topic: "Freight & Logistics", term: "Chassis Pool / Chassis Yard", def: "A \"chassis\" is the wheeled steel frame that a shipping container sits on for road transport. Chassis pools are shared inventories of chassis (operated by IEPs — Intermodal Equipment Providers like TRAC, DCLI, Flexi-Van) staged at strategic yards so drayage operators can grab one when needed. Chassis yards are a distinct IOS use — wide open paved or compacted yards with high stacking and rental income from the IEP." },
+  { topic: "Freight & Logistics", term: "Container Yard (CY)", def: "IOS facility used to store, stage, repair, and stack shipping containers (both empty and loaded). Common near ports and intermodal hubs. Operators are typically drayage companies, ocean carriers, or container leasing firms. Site requirements: heavy-duty surfacing (paving or thick base), high stacking capability (often 3–5 high), top-pick or reach-stacker access, and gate/security infrastructure." },
+
+  // Warehouse Operations
+  { topic: "Warehouse Operations", term: "OS&D (Over, Short & Damaged)", def: "Standard freight industry term for inventory discrepancies discovered at receiving: Over = more units received than the bill of lading shows; Short = fewer units than expected; Damaged = product arrived in unsellable condition. OS&D reports drive carrier claims, vendor chargebacks, and inventory reconciliation. The \"OS&D dock\" is the area set aside to quarantine and process these exceptions." },
+  { topic: "Warehouse Operations", term: "WMS (Warehouse Management System)", def: "Software platform that controls and tracks all warehouse operations: receiving, putaway, inventory location, picking, packing, shipping, and labor management. Industry-standard platforms include Manhattan Associates, Blue Yonder (JDA), SAP EWM, Oracle WMS, and Körber. WMS sophistication is a proxy for tenant credit and operational maturity — a tenant running a modern WMS is typically a higher-quality, stickier occupant." },
+  { topic: "Warehouse Operations", term: "Pick-and-Pack", def: "Order fulfillment operation where individual items are picked from inventory locations and packed into shipping cartons to fulfill specific orders. Distinguishes e-commerce/fulfillment operations (high SKU count, small order size, labor-intensive) from bulk distribution (full pallets, full truckloads). Drives building requirements: more mezzanines, conveyors, packing stations, parcel sortation." },
+  { topic: "Warehouse Operations", term: "Slotting / Slot Optimization", def: "Strategic placement of SKUs in warehouse storage locations to minimize labor, travel time, and congestion. High-velocity items go near pack-out stations; low-velocity items go in deeper or higher locations. Slot optimization is a continuous WMS-driven exercise. Tenants with sophisticated slotting are more efficient — and often more demanding of building specs (clear height, column spacing, racking access)." },
+  { topic: "Warehouse Operations", term: "VAS (Value-Added Services)", def: "Warehouse operations performed on inventory beyond simple storage and shipping — typically light assembly, kitting, labeling, repackaging, quality inspection, returns processing, ticketing, and customization. Allows 3PLs and fulfillment operators to charge premium rates and become stickier with customers. Tenants offering VAS need more conditioned space, more labor, and more sophisticated buildings — a leading indicator of tenant quality and lease term." },
+
+  // Specialized Facilities
+  { topic: "Specialized Facilities", term: "Bonded Warehouse", def: "Secured facility licensed by U.S. Customs and Border Protection (CBP) where imported goods can be stored without payment of duties for up to 5 years. Duties are deferred until goods are withdrawn into U.S. commerce (or eliminated if re-exported). Requires CBP-approved security, recordkeeping, and a customs bond. Used by importers managing cash flow on duty payments." },
+  { topic: "Specialized Facilities", term: "FTZ (Foreign Trade Zone)", def: "Federally designated geographic area, legally considered outside U.S. customs territory, where imported goods can be stored, processed, manufactured, or assembled with duty deferral, reduction, or elimination. Broader benefits than a bonded warehouse (allows manufacturing/transformation). Operated under FTZ Board oversight. Major tenants include automotive, pharma, and high-value goods importers." },
+  { topic: "Specialized Facilities", term: "HAZMAT-Permitted Facility", def: "Industrial property entitled and built to store, handle, or process hazardous materials (flammables, corrosives, toxics, oxidizers). Requires specialized permits (local fire department, EPA, state environmental agency), enhanced fire suppression (often foam systems), containment, ventilation, and spill response infrastructure. Higher rents, longer-term tenants, but heavier environmental risk and tougher financing/insurance." },
+
   // Prologis property categories
   { topic: "Prologis Categories", term: "Gateway distribution", def: "The biggest distribution buildings, near major sea ports or intermodal rail hubs. Typical spec: 36'–40' clear, 50'–60' × 60' column grid, 185'+ truck court, 1 dock door per 5K SF, 1 trailer stall per 5K SF, 250 PSF floor load, ESFR, 1,200A+ power. Typical size: 500K–1M+ SF. Examples of markets: South Dallas, Inland Empire East, Central PA, Savannah/Charleston corridor." },
   { topic: "Prologis Categories", term: "Multi-market distribution", def: "Same physical spec as Gateway but without port access — sit at highway hubs at the periphery of major metro areas. Typical size: 250K–750K SF. Tenant profile: regional distribution centers serving multi-state catchment areas." },
@@ -534,12 +655,17 @@ const STORAGE_KEY = "industrial-flashcards-v1";
 let state = {
   activeTopic: "All",
   hideKnown: false,
+  startSide: "term",   // "term" or "definition" — which side a fresh card shows
   index: 0,
   flipped: false,
   known: {},   // term -> true
   review: {},  // term -> true
   order: [],   // current deck order (indices into CARDS)
 };
+
+function initialFlipped() {
+  return state.startSide === "definition";
+}
 
 function loadState() {
   try {
@@ -550,6 +676,7 @@ function loadState() {
       state.review = saved.review || {};
       state.activeTopic = saved.activeTopic || "All";
       state.hideKnown = !!saved.hideKnown;
+      state.startSide = saved.startSide === "definition" ? "definition" : "term";
     }
   } catch (e) { /* ignore */ }
 }
@@ -560,6 +687,7 @@ function saveState() {
       review: state.review,
       activeTopic: state.activeTopic,
       hideKnown: state.hideKnown,
+      startSide: state.startSide,
     }));
   } catch (e) { /* ignore */ }
 }
@@ -592,32 +720,39 @@ function shuffleDeck() {
     [state.order[i], state.order[j]] = [state.order[j], state.order[i]];
   }
   state.index = 0;
-  state.flipped = false;
+  state.flipped = initialFlipped();
   render();
 }
 
-function renderChips() {
-  const chipsEl = document.getElementById("topic-chips");
-  chipsEl.innerHTML = "";
+function renderToolbar() {
+  const select = document.getElementById("topic-select");
   const topics = ["All", ...getTopics()];
-  for (const t of topics) {
+
+  // Build options once; thereafter just refresh the counts in the text.
+  const needRebuild = select.options.length !== topics.length
+    || Array.from(select.options).some((o, i) => o.value !== topics[i]);
+  if (needRebuild) {
+    select.innerHTML = "";
+    for (const t of topics) {
+      const opt = document.createElement("option");
+      opt.value = t;
+      select.appendChild(opt);
+    }
+  }
+  for (let i = 0; i < topics.length; i++) {
+    const t = topics[i];
     const count = t === "All" ? CARDS.length : CARDS.filter(c => c.topic === t).length;
     const known = t === "All"
       ? CARDS.filter(c => state.known[c.term]).length
       : CARDS.filter(c => c.topic === t && state.known[c.term]).length;
-    const chip = document.createElement("div");
-    chip.className = "chip" + (state.activeTopic === t ? " active" : "");
-    chip.innerHTML = `${t}<span class="count">${known}/${count}</span>`;
-    chip.addEventListener("click", () => {
-      state.activeTopic = t;
-      state.index = 0;
-      state.flipped = false;
-      saveState();
-      buildDeck();
-      render();
-    });
-    chipsEl.appendChild(chip);
+    select.options[i].textContent = `${t} (${known}/${count})`;
   }
+  select.value = state.activeTopic;
+
+  // Side toggle active state
+  document.querySelectorAll("#side-toggle .seg-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.side === state.startSide);
+  });
 }
 
 function render() {
@@ -625,7 +760,7 @@ function render() {
   const emptyEl = document.getElementById("empty-state");
   const stageEl = document.querySelector(".card-stage");
 
-  renderChips();
+  renderToolbar();
 
   // Stats
   const totalAll = CARDS.length;
@@ -683,14 +818,14 @@ function flip() {
 
 function next() {
   if (state.order.length === 0) return;
-  state.flipped = false;
+  state.flipped = initialFlipped();
   state.index = (state.index + 1) % state.order.length;
   render();
 }
 
 function prev() {
   if (state.order.length === 0) return;
-  state.flipped = false;
+  state.flipped = initialFlipped();
   state.index = (state.index - 1 + state.order.length) % state.order.length;
   render();
 }
@@ -777,10 +912,29 @@ document.getElementById("btn-reset").addEventListener("click", resetProgress);
 document.getElementById("hide-known").addEventListener("change", (e) => {
   state.hideKnown = e.target.checked;
   state.index = 0;
-  state.flipped = false;
+  state.flipped = initialFlipped();
   saveState();
   buildDeck();
   render();
+});
+
+document.getElementById("topic-select").addEventListener("change", (e) => {
+  state.activeTopic = e.target.value;
+  state.index = 0;
+  state.flipped = initialFlipped();
+  saveState();
+  buildDeck();
+  render();
+});
+
+document.querySelectorAll("#side-toggle .seg-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    state.startSide = btn.dataset.side;
+    // Flip the current card to match the new start side so the change is immediate
+    state.flipped = initialFlipped();
+    saveState();
+    render();
+  });
 });
 
 document.addEventListener("keydown", (e) => {
@@ -795,6 +949,7 @@ document.addEventListener("keydown", (e) => {
 
 // Init
 loadState();
+state.flipped = initialFlipped();
 buildDeck();
 render();
 </script>
