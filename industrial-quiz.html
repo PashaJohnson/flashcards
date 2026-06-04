@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<title>Industrial Quiz</title>
+
+<!-- iOS PWA / Home Screen support -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Quiz" />
+<meta name="theme-color" content="#000000" />
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a2332'/><circle cx='90' cy='86' r='44' fill='none' stroke='%23ffffff' stroke-width='10'/><path d='M118 116 L138 136' stroke='%23ffffff' stroke-width='12' stroke-linecap='round'/><text x='90' y='100' font-family='Inter, system-ui, sans-serif' font-size='44' font-weight='800' text-anchor='middle' fill='%23ffffff'>?</text></svg>" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #000000;
+    --on-bg: #ffffff;
+    --on-bg-soft: rgba(255,255,255,0.72);
+    --on-bg-mute: rgba(255,255,255,0.5);
+    --surface: #ffffff;
+    --surface-2: #fafbfc;
+    --border: #e3e5ea;
+    --border-strong: #c9ccd4;
+    --text: #1a1d24;
+    --text-soft: #555a66;
+    --text-mute: #8a8f99;
+    --accent: #1a2332;
+    --accent-soft: #eef1f7;
+    --gold: #c9a84c;
+    --green: #2e8b57;
+    --green-soft: #e6f4ea;
+    --green-border: #c8e6d3;
+    --red: #b03030;
+    --red-soft: #fbeaea;
+    --red-border: #f0c8c8;
+    --shadow: 0 6px 24px rgba(20, 25, 40, 0.06), 0 1px 3px rgba(20, 25, 40, 0.04);
+    --shadow-lift: 0 18px 48px rgba(20, 25, 40, 0.12), 0 2px 6px rgba(20, 25, 40, 0.06);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  html { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: contain;
+  }
+  .container {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+    padding-top: max(32px, env(safe-area-inset-top));
+    padding-bottom: max(80px, calc(env(safe-area-inset-bottom) + 24px));
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .title-block h1 {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.02em;
+    color: var(--on-bg);
+  }
+  .title-block p {
+    margin: 0;
+    color: var(--on-bg-soft);
+    font-size: 13px;
+  }
+  .stats {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .stat-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12.5px;
+    color: var(--text-soft);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .stat-pill b { color: var(--text); font-weight: 700; }
+  .stat-pill.correct { background: var(--green-soft); border-color: var(--green-border); color: #1e6b40; }
+  .stat-pill.correct b { color: #134b2c; }
+  .stat-pill.wrong { background: var(--red-soft); border-color: var(--red-border); color: #872626; }
+  .stat-pill.wrong b { color: #5e1a1a; }
+  .stat-pill.streak { background: #fff7e6; border-color: #f3e0b4; color: #8a6a18; }
+  .stat-pill.streak b { color: #5b4708; }
+
+  .toolbar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .toolbar-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .toolbar-row + .toolbar-row { margin-top: 10px; }
+  .toolbar-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-mute);
+    margin-right: 6px;
+  }
+  button.btn {
+    appearance: none;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    min-height: 38px;
+    transition: background 120ms ease, transform 60ms ease;
+  }
+  button.btn:hover { background: var(--surface-2); }
+  button.btn:active { transform: scale(0.98); }
+  button.btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  button.btn.primary:hover { background: #2a3346; }
+  button.btn.ghost {
+    border-color: var(--border);
+    color: var(--text-soft);
+    font-weight: 500;
+  }
+  .topic-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .chip {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-soft);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 11px;
+    border-radius: 999px;
+    cursor: pointer;
+    min-height: 32px;
+    transition: all 120ms ease;
+  }
+  .chip:hover { border-color: var(--border-strong); color: var(--text); }
+  .chip.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .chip .count {
+    opacity: 0.65;
+    font-weight: 500;
+    margin-left: 4px;
+  }
+
+  .toolbar-control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+  .select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 36px 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text);
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3 4.5l3 3 3-3' stroke='%23555a66' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    width: 100%;
+    transition: border-color 0.15s ease;
+  }
+  .select:hover { border-color: var(--border-strong); }
+  .select:focus { outline: none; border-color: var(--accent); }
+
+  .segmented {
+    display: inline-flex;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    gap: 2px;
+    width: 100%;
+  }
+  .seg-btn {
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex: 1;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 32px;
+  }
+  .seg-btn:hover { color: var(--text); }
+  .seg-btn.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .seg-btn .seg-count {
+    opacity: 0.75;
+    font-weight: 500;
+    font-size: 11px;
+  }
+  .seg-btn.active .seg-count { opacity: 0.9; }
+
+  .mark-row {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .mark-btn {
+    appearance: none;
+    flex: 1 1 160px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 120ms ease;
+  }
+  .mark-btn:hover { border-color: var(--border-strong); }
+  .mark-btn.got { color: #1e6b40; }
+  .mark-btn.got:hover, .mark-btn.got.is-set {
+    background: var(--green-soft);
+    border-color: var(--green);
+    color: #134b2c;
+  }
+  .mark-btn.review { color: #8a6a18; }
+  .mark-btn.review:hover, .mark-btn.review.is-set {
+    background: #fff7e6;
+    border-color: #c9a84c;
+    color: #5b4708;
+  }
+  .mark-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .mark-pill.got {
+    background: var(--green-soft);
+    color: #134b2c;
+    border: 1px solid var(--green-border);
+  }
+  .mark-pill.review {
+    background: #fff7e6;
+    color: #5b4708;
+    border: 1px solid #f3e0b4;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .progress-bar > div {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent) 0%, #2a3346 100%);
+    transition: width 240ms ease;
+  }
+
+  .quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    min-height: 360px;
+  }
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .term-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  .topic-tag {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    font-weight: 700;
+  }
+  .question {
+    font-size: 20px;
+    line-height: 1.45;
+    font-weight: 600;
+    margin: 8px 0 22px;
+    color: var(--text);
+    letter-spacing: -0.005em;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .option {
+    appearance: none;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: left;
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: 48px;
+    transition: background 120ms ease, border-color 120ms ease, transform 60ms ease;
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .option:active:not(:disabled) { transform: scale(0.995); }
+  .option:disabled { cursor: default; }
+  .option .letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .option.is-correct {
+    border-color: var(--green);
+    background: var(--green-soft);
+  }
+  .option.is-correct .letter {
+    background: var(--green);
+    color: #fff;
+  }
+  .option.is-wrong {
+    border-color: var(--red);
+    background: var(--red-soft);
+  }
+  .option.is-wrong .letter {
+    background: var(--red);
+    color: #fff;
+  }
+  .option.dim { opacity: 0.55; }
+
+  .feedback {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback .verdict {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .feedback.right .verdict { color: var(--green); }
+  .feedback.wrong .verdict { color: var(--red); }
+  .feedback .excerpt-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    margin-bottom: 4px;
+  }
+  .feedback .excerpt {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-soft);
+    font-style: italic;
+  }
+  .feedback .term-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 8px;
+    display: block;
+  }
+
+  .actions {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .shortcuts {
+    margin-top: 22px;
+    font-size: 11px;
+    color: var(--on-bg-mute);
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+  .shortcuts kbd {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: inherit;
+    font-size: 10.5px;
+    color: var(--on-bg-soft);
+    font-weight: 600;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-soft);
+  }
+  .empty-state h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--text);
+  }
+  .empty-state p { margin: 4px 0; font-size: 14px; }
+  .empty-state .big-score {
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 14px 0 8px;
+    letter-spacing: -0.03em;
+  }
+  .empty-state .pct {
+    font-size: 16px;
+    color: var(--text-mute);
+    font-weight: 600;
+  }
+
+  @media (max-width: 640px) {
+    .container { padding: 18px 14px 60px; }
+    .title-block h1 { font-size: 22px; }
+    .quiz-card { padding: 20px 18px; min-height: 340px; }
+    .question { font-size: 18px; }
+    .option { font-size: 14.5px; padding: 13px 14px; }
+    .stats { gap: 6px; }
+    .stat-pill { font-size: 11.5px; padding: 6px 10px; }
+    .shortcuts { display: none; }
+  }
+
+  /* Swipe area for mobile next */
+  @media (hover: none) {
+    .option:hover:not(:disabled) {
+      border-color: var(--border);
+      background: var(--surface);
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="top">
+    <div class="title-block">
+      <h1>Industrial Quiz</h1>
+      <p>Specific-detail multiple choice on the IOS vocabulary deck</p>
+    </div>
+    <div class="stats">
+      <span class="stat-pill correct">Right <b id="stat-right">0</b></span>
+      <span class="stat-pill wrong">Wrong <b id="stat-wrong">0</b></span>
+      <span class="stat-pill streak">Streak <b id="stat-streak">0</b></span>
+      <span class="stat-pill">Q <b id="stat-q">0</b>/<b id="stat-total">0</b></span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="toolbar-row">
+      <div class="toolbar-control" style="flex: 2 1 280px">
+        <span class="toolbar-label">Topic</span>
+        <select id="topic-select" class="select" aria-label="Filter by topic"></select>
+      </div>
+      <div class="toolbar-control" style="flex: 3 1 360px">
+        <span class="toolbar-label">Show</span>
+        <div class="segmented" id="status-filter" role="group" aria-label="Filter by mark">
+          <button class="seg-btn active" data-mode="all">All <span class="seg-count" id="count-all">0</span></button>
+          <button class="seg-btn" data-mode="unmarked">Unmarked <span class="seg-count" id="count-unmarked">0</span></button>
+          <button class="seg-btn" data-mode="review">Review <span class="seg-count" id="count-review">0</span></button>
+          <button class="seg-btn" data-mode="got">Got It <span class="seg-count" id="count-got">0</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="toolbar-row">
+      <button class="btn ghost" id="btn-shuffle">Shuffle</button>
+      <button class="btn ghost" id="btn-clear-marks">Clear marks (topic)</button>
+      <button class="btn primary" id="btn-restart">Restart session</button>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+
+  <main id="main"></main>
+
+  <p class="shortcuts">
+    <kbd>1</kbd>–<kbd>4</kbd> answer &nbsp;·&nbsp; <kbd>Space</kbd> / <kbd>Enter</kbd> next &nbsp;·&nbsp; <kbd>G</kbd> got it &nbsp;·&nbsp; <kbd>V</kbd> needs review &nbsp;·&nbsp; <kbd>S</kbd> shuffle &nbsp;·&nbsp; <kbd>R</kbd> restart
+  </p>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   QUESTION BANK
+   Every answer string is drawn directly from the vocab-list.md deck
+   so the source-of-truth excerpt is shown after each answer.
+   ------------------------------------------------------------------ */
+const QUESTIONS = [
+  // ============ Building Shell ============
+  { topic:"Building Shell", term:"Slab",
+    q:"What is the typical thickness of a warehouse slab?",
+    correct:"6\"–8\" thick",
+    distractors:["3\"–4\" thick","10\"–12\" thick","4\"–5\" thick"],
+    excerpt:"Typically 6\"–8\" thick, reinforced with rebar or fiber mesh, poured directly on a compacted gravel base." },
+  { topic:"Building Shell", term:"Slab",
+    q:"What is the ideal modern Class A slab spec?",
+    correct:"7\"–8\" at 5,000 PSI with FF50/FL35 finish",
+    distractors:["6\"–7\" at 4,000 PSI","5\"–6\" at 3,000 PSI","8\"–10\" at 6,000 PSI with FF75/FL50"],
+    excerpt:"Ideal modern Class A: 7\"–8\" at 5,000 PSI with FF50/FL35 finish for forklift and AS/RS operations." },
+
+  { topic:"Building Shell", term:"Slab-on-grade buildings",
+    q:"Where is slab-over-structural-floor (the alternative to slab-on-grade) most commonly found?",
+    correct:"Dense urban multi-story logistics (NYC, Brooklyn, parts of LA)",
+    distractors:["Suburban distribution parks in the Sun Belt","Cold storage facilities","Class A bulk distribution centers"],
+    excerpt:"The alternative — slab over a structural floor system — exists mostly in dense urban multi-story logistics (NYC, Brooklyn, parts of LA) and remains rare and very expensive." },
+
+  { topic:"Building Shell", term:"FF/FL ratings",
+    q:"What FF/FL rating is required for AS/RS or very-narrow-aisle racking?",
+    correct:"FF60+/FL40+",
+    distractors:["FF50/FL35","FF20–30/FL15–20","FF100+/FL75+"],
+    excerpt:"Required for AS/RS or very-narrow-aisle racking: FF60+/FL40+, sometimes FF100+ for the actual rack aisles." },
+  { topic:"Building Shell", term:"FF/FL ratings",
+    q:"What does surface grinding fix on a bad slab?",
+    correct:"It can improve FF but does little for FL",
+    distractors:["It improves both FF and FL equally","It improves FL but not FF","It improves neither — only re-pouring works"],
+    excerpt:"Slab flatness is fixable only to a limited extent — surface grinding can improve FF but does little for FL, so a bad slab is essentially a permanent constraint on tenant use." },
+
+  { topic:"Building Shell", term:"Minimum clear height for high-racking",
+    q:"What clear-height range supports 6-high pallet racking in standard modern logistics?",
+    correct:"32'–36'",
+    distractors:["24'–28'","28'–32'","36'–40'"],
+    excerpt:"32'–36' = standard modern logistics, supports 6-high." },
+  { topic:"Building Shell", term:"Minimum clear height for high-racking",
+    q:"Below what clear height do modern logistics tenants typically start passing?",
+    correct:"32' clear",
+    distractors:["24' clear","28' clear","36' clear"],
+    excerpt:"Practical floor: 32' clear is the threshold below which modern logistics tenants start passing." },
+
+  { topic:"Building Shell", term:"ESFR sprinklers",
+    q:"Above what storage height are ESFR sprinklers required per NFPA 13?",
+    correct:"~25' clear",
+    distractors:["~15' clear","~32' clear","~40' clear"],
+    excerpt:"Required: for racked storage above ~25' clear, per NFPA 13." },
+  { topic:"Building Shell", term:"ESFR sprinklers",
+    q:"What does an ESFR retrofit typically cost?",
+    correct:"$3–6/SF",
+    distractors:["$1–2/SF","$8–12/SF","$15–20/SF"],
+    excerpt:"Retrofit ESFR is doable but costs $3–6/SF depending on the configuration." },
+
+  { topic:"Building Shell", term:"Column grid",
+    q:"What column grid is typical for modern Class A logistics?",
+    correct:"50' × 50' or 50' × 54'",
+    distractors:["40' × 40'","30' × 30'","60' × 70'"],
+    excerpt:"Typical: 50' × 50' or 50' × 54' for modern Class A logistics." },
+  { topic:"Building Shell", term:"Column grid",
+    q:"What column grid was common in 90's-era buildings?",
+    correct:"40' × 40'",
+    distractors:["30' × 30'","50' × 54'","54' × 60'"],
+    excerpt:"90's-era buildings: 40' × 40' was common, which constrains racking aisles and reduces tenant universe." },
+
+  { topic:"Building Shell", term:"Bay",
+    q:"How large is a single bay in a 50' × 54' column grid?",
+    correct:"2,700 SF",
+    distractors:["2,500 SF","2,000 SF","3,000 SF"],
+    excerpt:"A building with a 50' × 54' column grid has 2,700 SF bays." },
+
+  { topic:"Building Shell", term:"Speed bay",
+    q:"How deep is a typical speed bay compared to the rest of the column grid?",
+    correct:"60' deep instead of 50'",
+    distractors:["50' deep instead of 40'","40' deep instead of 30'","75' deep instead of 60'"],
+    excerpt:"set deeper than the rest of the grid (typically 60' deep instead of 50') to give forklifts working room to maneuver." },
+
+  { topic:"Building Shell", term:"Loading bay",
+    q:"When a broker says \"this is the loading bay,\" what do they technically mean?",
+    correct:"The structural bay at the dock face containing the dock door",
+    distractors:["The truck court area in front of the building","The mezzanine office area","Any bay used for racking near the dock"],
+    excerpt:"When a broker says \"this is the loading bay,\" they mean the structural bay at the dock face containing the dock door, but they're often gesturing at the dock door itself." },
+
+  { topic:"Building Shell", term:"Shallow-bay",
+    q:"What is the typical total depth of a shallow-bay building?",
+    correct:"~100' total depth (1–2 structural bays)",
+    distractors:["~50' total depth","~200' total depth (3–4 bays)","~250'+ total depth (5+ bays)"],
+    excerpt:"A building where the depth (front-to-back) is 1–2 structural bays, typically ~100' total depth." },
+
+  { topic:"Building Shell", term:"Mid-bay",
+    q:"What is the typical total depth and clear height of a mid-bay building?",
+    correct:"150'–200' deep, 28'–32' clear",
+    distractors:["~100' deep, 20'–28' clear","250'+ deep, 36'+ clear","~75' deep, 16'–24' clear"],
+    excerpt:"Buildings 3–4 bays deep, typically 150'–200' total depth. ... Typical clear height: 28'–32'." },
+
+  { topic:"Building Shell", term:"Big-bay",
+    q:"What is the typical clear height for big-bay buildings?",
+    correct:"36'+",
+    distractors:["24'+","28'+","32'+"],
+    excerpt:"Buildings 5+ bays deep, often 250'+ total depth ... Typical clear height: 36'+." },
+
+  { topic:"Building Shell", term:"Office / mezzanine size",
+    q:"What office percentage is the target for modern Class A logistics?",
+    correct:"Under 5%",
+    distractors:["Under 10%","Under 15%","Under 20%"],
+    excerpt:"Modern Class A logistics target: under 5% — minimal office, maximum warehouse productivity." },
+  { topic:"Building Shell", term:"Office / mezzanine size",
+    q:"What office percentage is typical 90's-era spec?",
+    correct:"10–15% office",
+    distractors:["Under 5%","20–25% office","30%+ office"],
+    excerpt:"90's-era spec: often 10–15% office, sometimes more, which reads as functionally obsolete to modern tenants." },
+
+  { topic:"Building Shell", term:"Roof load",
+    q:"What is the typical baseline roof live load?",
+    correct:"30 PSF live load with 5 PSF allowance for hanging equipment",
+    distractors:["20 PSF live load with 2 PSF allowance","40 PSF live load with 10 PSF allowance","50 PSF live load with no equipment allowance"],
+    excerpt:"Typical: 30 PSF live load with 5 PSF allowance for hanging equipment." },
+  { topic:"Building Shell", term:"Roof load",
+    q:"What roof load is typical for modern Class A designed for future solar?",
+    correct:"40+ PSF",
+    distractors:["20 PSF","30 PSF","60+ PSF"],
+    excerpt:"Modern Class A: often 40+ PSF, designed for future solar (~3–4 PSF distributed)." },
+
+  // ============ Loading & Docks ============
+  { topic:"Loading & Docks", term:"Dock face",
+    q:"What is the dock face?",
+    correct:"The exterior wall of the building where the dock-high doors are located",
+    distractors:["The paved area where trailers back in","The first row of bays inside the building","The 48\" platform between trailer and slab"],
+    excerpt:"The exterior wall of the building where the dock-high doors are located. Trailers back perpendicular to this wall." },
+
+  { topic:"Loading & Docks", term:"Dock-high vs. grade-level doors",
+    q:"How high above grade are dock-high doors set?",
+    correct:"~48\" above grade",
+    distractors:["~24\" above grade","~36\" above grade","~60\" above grade"],
+    excerpt:"Dock-high doors are set ~48\" above grade so a trailer can back in and present its bed level with the dock floor." },
+
+  { topic:"Loading & Docks", term:"Standard dock height",
+    q:"What trailer type does the ~48\" standard dock height match?",
+    correct:"A standard 53' dry-van trailer",
+    distractors:["A 28' pup trailer","A 40' intermodal container chassis","A flatbed trailer"],
+    excerpt:"~48\" above grade. Matches the bed height of a standard 53' dry-van trailer." },
+
+  { topic:"Loading & Docks", term:"Dock door count and ratio",
+    q:"What is the target dock door ratio for cross-dock big-box?",
+    correct:"1 dock door per 5,000 SF",
+    distractors:["1 per 2,500 SF","1 per 7,500–10,000 SF","1 per 10,000–15,000 SF"],
+    excerpt:"cross-dock big-box targets 1 dock door per 5,000 SF." },
+  { topic:"Loading & Docks", term:"Dock door count and ratio",
+    q:"What is the target dock door ratio for rear-load big-box?",
+    correct:"1 per 7,500–10,000 SF",
+    distractors:["1 per 5,000 SF","1 per 10,000–15,000 SF","1 per 15,000–20,000 SF"],
+    excerpt:"Rear-load big-box targets 1 per 7,500–10,000 SF." },
+
+  { topic:"Loading & Docks", term:"Dock-high vs. grade-level mix",
+    q:"What dock mix is typical for last-mile / e-commerce fulfillment?",
+    correct:"60–70% dock-high plus 30–40% grade-level",
+    distractors:["95%+ dock-high with a couple grade-level","100% grade-level","50/50 dock-high and grade-level"],
+    excerpt:"Last-mile / e-commerce fulfillment: sometimes 60–70% dock-high (semi inbound) plus 30–40% grade-level (parcel van outbound)." },
+
+  { topic:"Loading & Docks", term:"Dock equipment spec",
+    q:"How much equipment cost does a fully equipped dock add beyond the door opening?",
+    correct:"$15K–25K per dock position",
+    distractors:["$5K–10K per dock position","$30K–50K per dock position","$50K–75K per dock position"],
+    excerpt:"a fully equipped dock represents $15K–25K of equipment beyond the structural cost of the door opening." },
+
+  { topic:"Loading & Docks", term:"Dock leveler",
+    q:"What is the typical rating of a mechanical dock leveler?",
+    correct:"25K–30K lbs",
+    distractors:["10K–15K lbs","35K–50K lbs","50K–75K lbs"],
+    excerpt:"Mechanical levelers: rated 25K–30K lbs, cheaper, common in older buildings." },
+  { topic:"Loading & Docks", term:"Dock leveler",
+    q:"What kind of leveler is used in food-grade and cold storage?",
+    correct:"Vertical-storing levelers",
+    distractors:["Mechanical levelers","Hydraulic edge-of-dock levelers","Pit-mounted mechanical levelers"],
+    excerpt:"Vertical-storing levelers: a newer style that stores vertically in front of the door — used in food-grade and cold storage because it allows the door to fully close, sealing the building." },
+
+  { topic:"Loading & Docks", term:"Dock seal / dock shelter",
+    q:"What is a dock seal made of?",
+    correct:"Foam-filled fabric pads that the trailer compresses",
+    distractors:["Inflatable rubber bladders that surround the trailer","Hard rubber gaskets bolted to the wall","Steel weather strips with rubber edges"],
+    excerpt:"Dock seals are foam-filled fabric pads that the trailer compresses — simpler, cheaper, more common." },
+
+  { topic:"Loading & Docks", term:"Dock apron",
+    q:"What is a typical dock apron spec?",
+    correct:"~60' deep, often 8\"+ reinforced concrete with rebar",
+    distractors:["~30' deep, 4\" standard concrete","~100' deep, 12\" plain concrete","~20' deep, 6\" asphalt"],
+    excerpt:"The strip of pavement directly in front of the dock face, typically ~60' deep. Built with thicker reinforced concrete (often 8\"+ with rebar) to handle point loads from trailer landing gear." },
+
+  { topic:"Loading & Docks", term:"Truck court",
+    q:"What pavement is typical for a truck court?",
+    correct:"4\" asphalt over 8\" base, or concrete in high-traffic zones",
+    distractors:["2\" asphalt over 4\" base","6\" asphalt over 12\" base","6\" concrete over compacted gravel only"],
+    excerpt:"Heavy-duty pavement (typically 4\" asphalt over 8\" base, or concrete in high-traffic zones)." },
+
+  { topic:"Loading & Docks", term:"Truck court depth",
+    q:"What is the standard truck court depth for modern City distribution and mid-bay?",
+    correct:"130'",
+    distractors:["60'","185'","240'+"],
+    excerpt:"130': standard for modern City distribution and mid-bay — backed-in trailer plus drive aisle." },
+  { topic:"Loading & Docks", term:"Truck court depth",
+    q:"What is the Gateway big-box truck court spec?",
+    correct:"185'",
+    distractors:["130'","100'","240'+"],
+    excerpt:"185': Gateway big-box spec — adds a row of stored trailers." },
+
+  { topic:"Loading & Docks", term:"Backed-in trailers",
+    q:"How much of a truck court depth does a backed-in trailer plus tractor occupy?",
+    correct:"~65–70' from the dock face",
+    distractors:["~40–50' from the dock face","~85–100' from the dock face","~120' from the dock face"],
+    excerpt:"A 53' trailer plus tractor adds up to ~65–70' from the dock face. The first 65–70' of any truck court is dedicated to backed-in positions." },
+
+  { topic:"Loading & Docks", term:"Drive aisle",
+    q:"What is the standard drive aisle width behind backed-in trailers?",
+    correct:"~60' wide",
+    distractors:["~30' wide","~45' wide","~90' wide"],
+    excerpt:"The clear lane behind the backed-in trailers, ~60' wide, sized for a 53' trailer to circulate." },
+
+  { topic:"Loading & Docks", term:"Turning radius",
+    q:"Roughly how much swing room does a 53' trailer need?",
+    correct:"~55'–60' of swing room",
+    distractors:["~30'–40' of swing room","~75'–80' of swing room","~100'+ of swing room"],
+    excerpt:"A 53' trailer needs roughly 55'–60' of swing room." },
+
+  { topic:"Loading & Docks", term:"Trailer parking",
+    q:"What is the standard trailer parking ratio for modern Class A big-box?",
+    correct:"1 trailer stall per 5,000 SF",
+    distractors:["1 stall per 2,500 SF","1 stall per 10,000 SF","1 stall per 20,000 SF"],
+    excerpt:"Standard ratio: 1 trailer stall per 5,000 SF of building for modern Class A big-box." },
+
+  { topic:"Loading & Docks", term:"Truck well",
+    q:"What is the budget per well for reconstructing older asphalt truck wells?",
+    correct:"$25K–50K per well",
+    distractors:["$5K–10K per well","$10K–20K per well","$100K+ per well"],
+    excerpt:"Diligence item: on older asphalt wells, budget $25K–50K per well for reconstruction." },
+
+  { topic:"Loading & Docks", term:"Truck ramp",
+    q:"What is the most common case for a truck ramp?",
+    correct:"A ramp connecting grade-level truck court to an elevated slab so equipment can be driven inside via a grade-level door",
+    distractors:["A ramp from a parking lot up to an office mezzanine","A ramp from below-grade parking to a truck court","A ramp connecting two warehouses across a property line"],
+    excerpt:"Most common case: a ramp connecting the grade-level truck court to an elevated slab inside the building so equipment can be driven inside via a grade-level door." },
+
+  { topic:"Loading & Docks", term:"Fully elevated slab",
+    q:"Since when has the fully elevated slab been the default for tilt-up industrial?",
+    correct:"Since the 1980s",
+    distractors:["Since the 1960s","Since the 1990s","Since the 2000s"],
+    excerpt:"The modern default for tilt-up industrial since the 1980s — cheaper than excavating wells, cleaner site presentation." },
+
+  { topic:"Loading & Docks", term:"Stepped or partial elevation",
+    q:"What is the main operational drawback of a stepped or partial elevation building?",
+    correct:"Racking and forklift work suffer on sloped floors",
+    distractors:["It blocks ESFR sprinkler coverage","Trailers can't fully back into docks","The slab can't be reinforced to modern PSF specs"],
+    excerpt:"Drawback: operationally awkward — racking and forklift work suffer on sloped floors." },
+
+  { topic:"Loading & Docks", term:"Below-grade truck court",
+    q:"When is a below-grade truck court typically used?",
+    correct:"On tight infill sites where a continuous elevated dock face was desired",
+    distractors:["On large suburban Class A sites for cost savings","Anywhere stormwater regs require depressed yards","On cold storage to keep dock doors thermally sealed"],
+    excerpt:"Rare and expensive — usually only on tight infill sites where a continuous elevated dock face was desired." },
+
+  { topic:"Loading & Docks", term:"Drive-through / pull-through / double-loaded",
+    q:"Which term specifically means dock-high on both sides?",
+    correct:"Cross-dock",
+    distractors:["Drive-through","Pull-through","Double-loaded"],
+    excerpt:"None of these are interchangeable with \"cross-dock,\" which specifically means dock-high on both sides." },
+
+  { topic:"Loading & Docks", term:"Mixed-dock",
+    q:"What tenant profile does a mixed-dock building serve?",
+    correct:"Tenants who receive on semis and ship out via vans or box trucks (e.g., e-commerce fulfillment with parcel-carrier outbound)",
+    distractors:["Heavy manufacturing receiving raw materials by rail","Cold storage receiving and shipping on full semis only","Contractor yards with no truck loading"],
+    excerpt:"Useful for tenants who receive on semis and ship out via vans or box trucks (e-commerce fulfillment with parcel-carrier outbound)." },
+
+  { topic:"Loading & Docks", term:"Knock-out panel",
+    q:"How much extra knock-out capacity does modern Class A construction typically include?",
+    correct:"10–20% extra above day-one dock count",
+    distractors:["5% extra","25–35% extra","No standard — always tenant-driven"],
+    excerpt:"Modern Class A construction: typically includes 10–20% extra knock-outs above the day-one dock count to support future tenant flexibility." },
+
+  { topic:"Loading & Docks", term:"Man door",
+    q:"What is a man door?",
+    correct:"A standard pedestrian door (~3' wide), not a loading position",
+    distractors:["A small 6'×6' grade-level door for hand carts","An emergency-exit-only door near the dock face","An interior door between warehouse and office"],
+    excerpt:"A standard pedestrian door (~3' wide). Not a loading position." },
+
+  { topic:"Loading & Docks", term:"Grade-level door",
+    q:"What is the typical size of a grade-level door for most IOS uses?",
+    correct:"12' wide × 14' tall",
+    distractors:["10' wide × 10' tall","14' wide × 16' tall","16' wide × 20' tall"],
+    excerpt:"Typical size: 12' wide × 14' tall for most uses, 14' × 16' or larger for trucks." },
+
+  { topic:"Loading & Docks", term:"Auto parking",
+    q:"What is a typical zoning requirement for auto parking in warehouses?",
+    correct:"1 stall per 1,000–2,000 SF of warehouse use",
+    distractors:["1 stall per 500 SF of warehouse use","1 stall per 5,000 SF of warehouse use","1 stall per 250 SF of warehouse use"],
+    excerpt:"Typical zoning requirement: 1 stall per 1,000–2,000 SF of warehouse use, with higher ratios for office." },
+
+  { topic:"Loading & Docks", term:"Loading dock equipment \"load rating\"",
+    q:"What load rating do hydraulic dock levelers carry?",
+    correct:"35K–50K lbs",
+    distractors:["10K–20K lbs","25K–30K lbs","75K–100K lbs"],
+    excerpt:"Hydraulic levelers: 35K–50K lbs, needed for heavier counterbalance forklifts moving full-weight pallets." },
+
+  { topic:"Loading & Docks", term:"Truck turn count per day",
+    q:"What is the daily throughput for a high-throughput parcel hub or e-commerce fulfillment?",
+    correct:"200+ trucks/day",
+    distractors:["50–100 trucks/day","10–20 trucks/day","500+ trucks/day"],
+    excerpt:"High-throughput parcel hub or e-commerce fulfillment: 200+ trucks/day." },
+
+  // ============ Floor & Structural Loads ============
+  { topic:"Floor & Structural Loads", term:"Floor load / slab load capacity",
+    q:"What is the floor load for standard logistics?",
+    correct:"100–125 PSF (6\"–7\" slab)",
+    distractors:["50–75 PSF","250 PSF","500+ PSF"],
+    excerpt:"Standard logistics: 100–125 PSF (6\"–7\" slab)." },
+  { topic:"Floor & Structural Loads", term:"Floor load / slab load capacity",
+    q:"What floor load is spec for modern Class A big-box?",
+    correct:"250 PSF (7\"–8\" slab, heavier reinforcement)",
+    distractors:["125 PSF","350 PSF","500 PSF"],
+    excerpt:"Modern Class A big-box: 250 PSF (7\"–8\" slab, heavier reinforcement)." },
+  { topic:"Floor & Structural Loads", term:"Floor load / slab load capacity",
+    q:"Why does cold storage need 300+ PSF floor load?",
+    correct:"Because of densified racking",
+    distractors:["Because of refrigerant tank weight","Because of insulated floor systems","Because of heavier forklift weight"],
+    excerpt:"Cold storage: 300+ PSF because of densified racking." },
+
+  { topic:"Floor & Structural Loads", term:"Point load / rack-leg load",
+    q:"What is the modern Class A spec for rack-leg load?",
+    correct:"20K–25K lbs on a ~6\" × 6\" plate",
+    distractors:["5K–10K lbs","50K+ lbs","100K+ lbs"],
+    excerpt:"Modern Class A spec: 250 PSF general floor + 20K–25K lbs rack leg load." },
+
+  { topic:"Floor & Structural Loads", term:"Wheel load / axle load",
+    q:"What does a loaded 5K-capacity forklift weigh?",
+    correct:"13K–15K lbs",
+    distractors:["5K–7K lbs","8K–10K lbs","20K+ lbs"],
+    excerpt:"a 5K-capacity forklift weighs 8K–10K lbs empty and 13K–15K lbs loaded, with most weight on the front axle." },
+
+  // ============ Electrical & Power ============
+  { topic:"Electrical & Power", term:"Power service",
+    q:"What is the standard power service range for logistics?",
+    correct:"400–800A",
+    distractors:["100–200A","1,200–2,500A","4,000+A"],
+    excerpt:"Standard logistics: 400–800A." },
+  { topic:"Electrical & Power", term:"Power service",
+    q:"What power service is typical for high-throughput logistics with battery charging?",
+    correct:"1,200–2,500A",
+    distractors:["400–800A","2,000–4,000A","10,000+A"],
+    excerpt:"High-throughput logistics with battery charging: 1,200–2,500A." },
+  { topic:"Electrical & Power", term:"Power service",
+    q:"What power service is typical for cold storage?",
+    correct:"2,000–4,000A",
+    distractors:["400–800A","1,200–2,500A","6,000+A"],
+    excerpt:"Cold storage: 2,000–4,000A." },
+
+  { topic:"Electrical & Power", term:"Three-phase power",
+    q:"What is the standard industrial three-phase voltage?",
+    correct:"277/480V",
+    distractors:["120/208V","240V single-phase","4,160V"],
+    excerpt:"Standard industrial three-phase: 277/480V (used for motors, lighting, HVAC; the 277V is for lighting circuits, 480V for equipment)." },
+
+  { topic:"Electrical & Power", term:"Electrical load",
+    q:"What is the typical utility upgrade timeline in many markets?",
+    correct:"18–36 months",
+    distractors:["3–6 months","6–12 months","48–60 months"],
+    excerpt:"Utility upgrade timelines run 18–36 months in many markets; costs run into the millions for major upgrades." },
+
+  { topic:"Electrical & Power", term:"Primary service",
+    q:"What primary service is typical for 90's-era shallow-bay buildings?",
+    correct:"400–800A at 208V or 240V three-phase",
+    distractors:["1,200–2,000A at 480Y/277V","3,000A+ at 480Y/277V","100–200A at 120V single-phase"],
+    excerpt:"Typical 90's-era shallow-bay: 400–800A at 208V or 240V three-phase." },
+  { topic:"Electrical & Power", term:"Primary service",
+    q:"What primary service is typical for modern Class A logistics?",
+    correct:"1,200–2,000A at 480Y/277V three-phase",
+    distractors:["400–800A at 208V","3,000A+ at 277V","2,000A+ at 4,160V"],
+    excerpt:"Modern Class A logistics: 1,200–2,000A at 480Y/277V three-phase." },
+  { topic:"Electrical & Power", term:"Primary service",
+    q:"What is the cost and timeline for a service upgrade in most major markets right now?",
+    correct:"$250K–1M+ and 18–36 months",
+    distractors:["$50K–100K and 3–6 months","$100K–250K and 12 months","$1M–5M and 48 months"],
+    excerpt:"Service upgrades: $250K–1M+ and 18–36 months in most major markets right now." },
+
+  { topic:"Electrical & Power", term:"Transformer",
+    q:"What voltage does a pad-mounted utility transformer step down from?",
+    correct:"12.47 kV down to 480V or 208V building voltage",
+    distractors:["4,160V down to 480V","69 kV down to 277V","240V down to 120V"],
+    excerpt:"The utility (pad-mounted) transformer outside the building steps primary voltage (12.47 kV) down to building voltage (480V or 208V)." },
+  { topic:"Electrical & Power", term:"Transformer",
+    q:"What transformer sizing is typical for cold storage / automation?",
+    correct:"3,000–5,000+ kVA",
+    distractors:["500–1,000 kVA","1,500–3,000 kVA","250–500 kVA"],
+    excerpt:"Cold storage / automation: 3,000–5,000+ kVA." },
+
+  { topic:"Electrical & Power", term:"Switchgear",
+    q:"What is typical modern Class A switchgear capacity?",
+    correct:"1,200–3,000A with multiple distribution sections",
+    distractors:["400–800A with single distribution","100–400A panel-grade","5,000A+ data-center grade"],
+    excerpt:"Typical modern Class A: 1,200–3,000A with multiple distribution sections." },
+
+  { topic:"Electrical & Power", term:"Switchboard",
+    q:"What is the practical capacity split between switchboards and switchgear?",
+    correct:"Switchboards run up to ~1,200A; switchgear handles 2,000A+",
+    distractors:["Switchboards 400A; switchgear 800A+","Switchboards 2,000A; switchgear 5,000A+","They are fully interchangeable terms"],
+    excerpt:"Capacity split: switchboards run up to ~1,200A; switchgear handles 2,000A+." },
+
+  { topic:"Electrical & Power", term:"Utility meter / revenue meter",
+    q:"What interval do modern smart meters record?",
+    correct:"15-minute intervals, read remotely",
+    distractors:["1-minute intervals, read in person","Hourly intervals, sent monthly","Daily totals only"],
+    excerpt:"Modern: digital \"smart meters\" recording 15-minute interval data, read remotely." },
+  { topic:"Electrical & Power", term:"Utility meter / revenue meter",
+    q:"What can a 500K SF building run in monthly demand charges alone?",
+    correct:"$20K–40K/month in demand alone",
+    distractors:["$5K–10K/month","$50K–100K/month","$100K+/month"],
+    excerpt:"a 500K SF building can run $20K–40K/month in demand alone." },
+
+  { topic:"Electrical & Power", term:"Submeter",
+    q:"What does it cost to install a submeter per suite?",
+    correct:"$1,500–4,000 per suite",
+    distractors:["$250–500 per suite","$500–1,000 per suite","$10,000+ per suite"],
+    excerpt:"Cost to install: $1,500–4,000 per suite, very justifiable if any tenant has unusual load." },
+
+  { topic:"Electrical & Power", term:"Panel / panelboard",
+    q:"What is the common panel problem in 90's-era buildings?",
+    correct:"Fully loaded panels with no spare slots — any tenant addition requires a sub-panel or panel replacement",
+    distractors:["Panels rated to wrong voltage for modern equipment","Panels missing arc-flash protection","Panels with too many spare breakers driving up cost"],
+    excerpt:"Common in 90's-era buildings: fully loaded panels with no spare slots — any tenant addition requires a sub-panel or panel replacement." },
+
+  { topic:"Electrical & Power", term:"Feeder",
+    q:"What is a feeder?",
+    correct:"The heavy cables (or bus duct) running from the main switchgear to a downstream panel, transformer, or major load",
+    distractors:["The utility line entering the building from the street","The branch circuits feeding individual receptacles","The grounding conductor running to the building steel"],
+    excerpt:"The heavy cables (or bus duct) running from the main switchgear to a downstream panel, transformer, or major load." },
+
+  { topic:"Electrical & Power", term:"Voltage (V)",
+    q:"What voltage configuration is a deal-killer or major capex item for a modern industrial building?",
+    correct:"Single-phase service",
+    distractors:["480Y/277V three-phase","208Y/120V three-phase","4,160V three-phase"],
+    excerpt:"Diligence filter: single-phase service in a building you want to lease as modern industrial is a deal-killer or major capex item." },
+
+  { topic:"Electrical & Power", term:"Amperage (A)",
+    q:"What is the typical industrial amperage range, from small older to modern big-box?",
+    correct:"400A to 4,000A+",
+    distractors:["100A to 800A","800A to 2,000A","2,000A to 10,000A"],
+    excerpt:"Typical industrial range: 400A (small older buildings) to 4,000A+ (modern big-box). Cold storage and automation can push to 10,000A+." },
+
+  { topic:"Electrical & Power", term:"Wattage (W) / kilowatts (kW)",
+    q:"Roughly what kW capacity does a 1,000A service at 480V three-phase produce?",
+    correct:"~831 kW capacity",
+    distractors:["~480 kW","~1,200 kW","~2,000 kW"],
+    excerpt:"Example: a 1,000A service at 480V three-phase = ~831 kW capacity." },
+
+  { topic:"Electrical & Power", term:"kVA (kilovolt-amps)",
+    q:"What's the typical power factor for industrial buildings?",
+    correct:"0.85–0.95",
+    distractors:["0.50–0.65","0.70–0.80","1.0 (perfect)"],
+    excerpt:"Typical power factor: 0.85–0.95 for industrial buildings (motors and HVAC drag it down)." },
+
+  { topic:"Electrical & Power", term:"W/SF (watts per square foot)",
+    q:"What is the standard logistics W/SF target?",
+    correct:"5 W/SF",
+    distractors:["2 W/SF","10 W/SF","20 W/SF"],
+    excerpt:"Standard logistics target: 5 W/SF." },
+  { topic:"Electrical & Power", term:"W/SF (watts per square foot)",
+    q:"What W/SF is typical for cold storage?",
+    correct:"15–25 W/SF",
+    distractors:["2–3 W/SF","5–10 W/SF","100+ W/SF"],
+    excerpt:"Cold storage: 15–25 W/SF." },
+  { topic:"Electrical & Power", term:"W/SF (watts per square foot)",
+    q:"What W/SF is required for data center conversion?",
+    correct:"100+ W/SF",
+    distractors:["5 W/SF","20 W/SF","50 W/SF"],
+    excerpt:"Data center conversion: 100+ W/SF (a different planet)." },
+
+  // ============ Yard & IOS Amenities ============
+  { topic:"Yard & IOS Amenities", term:"Wash bay",
+    q:"What is the typical cost to build a wash bay?",
+    correct:"$75K–250K",
+    distractors:["$15K–40K","$300K–500K","$1M+"],
+    excerpt:"In IOS: one of the highest-value yard improvements. Cost to build: $75K–250K." },
+  { topic:"Yard & IOS Amenities", term:"Wash bay",
+    q:"Where must wash bay runoff be routed?",
+    correct:"Through an oil/water separator (storm runoff not allowed)",
+    distractors:["Directly to the storm sewer","Through a sediment trap to the street","To a bioswale on the property edge"],
+    excerpt:"A covered area for cleaning vehicles or equipment, with high-pressure water and drainage routed through an oil/water separator (storm runoff not allowed)." },
+
+  { topic:"Yard & IOS Amenities", term:"Service bay",
+    q:"What is a typical service bay configuration?",
+    correct:"Grade-level doors, reinforced slab, and 14'+ clear height",
+    distractors:["Dock-high doors, standard slab, 10' clear height","Roll-up doors only, 8\" slab, 20'+ clear","Sliding doors, 6\" slab, 12' clear height"],
+    excerpt:"A drive-in bay for vehicle or equipment repair, with grade-level doors, reinforced slab, and 14'+ clear height." },
+  { topic:"Yard & IOS Amenities", term:"Service bay",
+    q:"What is the typical cost to build a service bay (excluding equipment)?",
+    correct:"$200–400/SF",
+    distractors:["$50–100/SF","$100–150/SF","$500–700/SF"],
+    excerpt:"Cost to build: $200–400/SF plus equipment." },
+
+  { topic:"Yard & IOS Amenities", term:"Oil/water separator",
+    q:"How often does an oil/water separator need pumping?",
+    correct:"Every 3–12 months depending on use",
+    distractors:["Once a year minimum","Every 5 years","Only when blocked"],
+    excerpt:"Maintenance: needs pumping every 3–12 months depending on use; $500–2,000 per service." },
+
+  { topic:"Yard & IOS Amenities", term:"Sand pit",
+    q:"What is a typical sand pit size?",
+    correct:"20'–40' across with railroad-tie or concrete curbs",
+    distractors:["10'–15' across with plastic edging","50'–75' across with chain-link border","100'+ across, no curbs"],
+    excerpt:"Typical: 20'–40' across with railroad-tie or concrete curbs and graded drainage to a sump." },
+
+  { topic:"Yard & IOS Amenities", term:"Oil tank (AST/UST)",
+    q:"What is the SPCC plan trigger threshold for site aggregate oil storage?",
+    correct:"1,320 gallons",
+    distractors:["500 gallons","2,500 gallons","10,000 gallons"],
+    excerpt:"Required: SPCC plan if site aggregate exceeds 1,320 gallons." },
+
+  { topic:"Yard & IOS Amenities", term:"Air compressor",
+    q:"What size compressor is typical for heavy fleet operations?",
+    correct:"25–100 HP two-stage rotary screw",
+    distractors:["1–3 HP portable","5–25 HP single-stage","200+ HP centrifugal"],
+    excerpt:"Typical: 5–25 HP single-stage for shop use; 25–100 HP two-stage rotary screw for heavy fleet operations." },
+
+  { topic:"Yard & IOS Amenities", term:"Air lines",
+    q:"What pipe diameter is typical for compressed air distribution?",
+    correct:"3/4\"–1.5\" black iron or copper",
+    distractors:["1/4\"–1/2\" copper only","2\"–3\" galvanized steel","PVC at any diameter"],
+    excerpt:"Typical: black iron or copper piping, 3/4\"–1.5\" diameter, with quick-connect drops every 20–40' along walls and at workstations." },
+
+  { topic:"Yard & IOS Amenities", term:"Fuel tank",
+    q:"What is a typical aboveground fuel tank (AST) size on IOS sites?",
+    correct:"500–2,000 gallon AST (double-walled with overfill prevention)",
+    distractors:["100–250 gallon AST","5,000–10,000 gallon AST","20,000+ gallon AST"],
+    excerpt:"Typical: 500–2,000 gallon AST (double-walled with overfill prevention and emergency shutoff)." },
+  { topic:"Yard & IOS Amenities", term:"Fuel tank",
+    q:"What rent premium can a fueling island drive for fleet tenants?",
+    correct:"15–25% rent premium",
+    distractors:["3–5% rent premium","5–10% rent premium","30–50% rent premium"],
+    excerpt:"In IOS: a fueling island is a major amenity that can drive 15–25% rent premium for fleet tenants." },
+
+  { topic:"Yard & IOS Amenities", term:"Jib crane",
+    q:"What is the typical capacity and reach of a jib crane?",
+    correct:"500 lbs–5 tons capacity; 8'–20' reach",
+    distractors:["50–500 lbs; 2'–4' reach","10–25 tons; 25'–40' reach","25–50 tons; 50'+ reach"],
+    excerpt:"Typical capacity: 500 lbs–5 tons; typical reach: 8'–20'." },
+  { topic:"Yard & IOS Amenities", term:"Jib crane",
+    q:"What does a jib crane cost to install?",
+    correct:"$5K–25K",
+    distractors:["$500–2K","$50K–100K","$100K+"],
+    excerpt:"Cost to install: $5K–25K." },
+
+  { topic:"Yard & IOS Amenities", term:"Overhead bridge crane",
+    q:"What is the typical capacity range for a bridge crane in light fabrication?",
+    correct:"1–25 tons",
+    distractors:["500 lbs–5 tons","50–100 tons","100+ tons"],
+    excerpt:"Typical capacity: 1–25 tons (light fabrication) up to 100+ tons (heavy manufacturing)." },
+
+  { topic:"Yard & IOS Amenities", term:"Gantry crane",
+    q:"How does a gantry crane differ from a bridge crane?",
+    correct:"It is supported by its own freestanding legs on floor/ground-mounted rails, not building structure",
+    distractors:["It uses a single rail rather than two parallel runways","It has higher capacity but slower travel speed","It is always indoor-only"],
+    excerpt:"A lifting system similar to a bridge crane but supported by its own freestanding legs that run on floor-mounted or ground-level rails, rather than mounting to building structure." },
+
+  { topic:"Yard & IOS Amenities", term:"Monorail crane",
+    q:"What is a monorail crane?",
+    correct:"A single-rail overhead system where a hoist trolley travels along one fixed beam",
+    distractors:["A dual-beam crane on rubber tires","A crane that travels on the building roof structure","A wall-mounted crane with a single swing arm"],
+    excerpt:"A single-rail overhead lifting system where a hoist trolley travels along one fixed beam (no bridge), typically following a defined path between work stations." },
+
+  // ============ Yard Surfaces ============
+  { topic:"Yard Surfaces", term:"Native / Dirt",
+    q:"Where is native/dirt typically used?",
+    correct:"On un-leased yards or low-rent uses like cold storage of pipe or idle equipment",
+    distractors:["On Class A IOS sites with truck staging","On chassis yards near ports","On parking areas for tractor-trailers"],
+    excerpt:"Cheapest surface but poor load-bearing, drainage, and dust control. Typically found on un-leased yards or low-rent uses like cold storage of pipe or idle equipment." },
+
+  { topic:"Yard Surfaces", term:"Road Base (ABC / CAB)",
+    q:"What does ABC / CAB stand for?",
+    correct:"Aggregate Base Course / Crushed Aggregate Base",
+    distractors:["Asphalt Binder Coat / Compacted Asphalt Base","All-Binder Compound / Coarse Aggregate Blend","Angular Base Cement / Cured Asphalt Bond"],
+    excerpt:"Road Base (ABC / CAB) — Also: Aggregate Base Course / ABC / Crushed Aggregate Base / CAB." },
+
+  { topic:"Yard Surfaces", term:"Class 2 Aggregate Base (Caltrans spec)",
+    q:"Whose spec is Class 2 Aggregate Base?",
+    correct:"California's standard road base spec (Caltrans)",
+    distractors:["Texas DOT's standard","ASTM's universal national spec","Federal Highway Administration's spec"],
+    excerpt:"California's standard road base spec. Crushed rock with fines, ¾\" or 1½\" maximum aggregate size." },
+
+  { topic:"Yard Surfaces", term:"Type I Aggregate Base",
+    q:"What makes Type I Aggregate Base the highest-quality category?",
+    correct:"100% crushed virgin rock, tight gradation, highest load-bearing",
+    distractors:["50% crushed and 50% rounded blend","Recycled concrete with virgin sand","Crushed rock with bituminous binder added"],
+    excerpt:"ASTM/AASHTO classification for the highest-quality crushed stone base — 100% crushed virgin rock, tight gradation, highest load-bearing." },
+
+  { topic:"Yard Surfaces", term:"Type II Aggregate Base",
+    q:"What is Type II Aggregate Base most commonly used for?",
+    correct:"Most common road base spec for IOS yards — balances cost and performance",
+    distractors:["Only for sub-base under asphalt","Heavy-duty Class A logistics drive aisles only","Decorative landscape applications"],
+    excerpt:"Most common road base spec for IOS yards — balances cost and performance." },
+
+  { topic:"Yard Surfaces", term:"Type III Aggregate Base",
+    q:"What does Type III Aggregate Base allow that Type I does not?",
+    correct:"Recycled materials (crushed concrete, RAP) blended with virgin aggregate",
+    distractors:["100% virgin granite only","Larger maximum aggregate size up to 4\"","Bituminous binder mixed into the base"],
+    excerpt:"Lower-grade base allowing recycled materials (crushed concrete, RAP) blended with virgin aggregate." },
+
+  { topic:"Yard Surfaces", term:"DG (Decomposed Granite)",
+    q:"Where is DG most commonly sourced and used?",
+    correct:"The Southwest — Phoenix, SoCal, Vegas",
+    distractors:["The Pacific Northwest — Seattle, Portland","The Northeast — NYC, Boston","The Gulf Coast — Houston, New Orleans"],
+    excerpt:"Common in the Southwest (Phoenix, SoCal, Vegas) where locally sourced." },
+
+  { topic:"Yard Surfaces", term:"Gravel",
+    q:"What is gravel best used for?",
+    correct:"A top dressing or drainage application, not a primary load surface",
+    distractors:["A primary load surface for trailer storage","A base course under asphalt","Container stacking yards"],
+    excerpt:"Best as a top dressing or drainage application, not a primary load surface." },
+
+  { topic:"Yard Surfaces", term:"Crushed Concrete (RCA)",
+    q:"What does RCA stand for?",
+    correct:"Recycled Concrete Aggregate",
+    distractors:["Reinforced Concrete Aggregate","Reclaimed Crushed Asphalt","Rotary Compacted Aggregate"],
+    excerpt:"Recycled Concrete Aggregate. Demolished concrete crushed and screened to base-course gradation." },
+
+  { topic:"Yard Surfaces", term:"RAP (Reclaimed Asphalt Pavement / Millings)",
+    q:"Why does RAP perform like a low-grade asphalt surface?",
+    correct:"Residual binder causes it to re-compact and \"knit\" over time",
+    distractors:["The fines bind chemically with rainwater","The angular shape locks like crushed stone","Sun heating causes surface vitrification"],
+    excerpt:"Residual binder causes it to re-compact and \"knit\" over time, performing like a low-grade asphalt surface." },
+
+  { topic:"Yard Surfaces", term:"Caliche",
+    q:"Where is caliche common as a yard base material?",
+    correct:"Phoenix, Vegas, and Tucson",
+    distractors:["Atlanta, Charlotte, Nashville","Salt Lake City, Denver, Boise","Portland, Seattle, Sacramento"],
+    excerpt:"Naturally cemented calcium carbonate hardpan, common in Phoenix, Vegas, and Tucson." },
+
+  { topic:"Yard Surfaces", term:"Crusher Run (Crush-and-Run / QP)",
+    q:"What region uses the term Crusher Run / Crush-and-Run / Quarry Process?",
+    correct:"East Coast / Southeast",
+    distractors:["West Coast","Mountain West","Midwest only"],
+    excerpt:"East Coast / Southeast term for crushed stone with fines. Roughly equivalent to West Coast road base." },
+
+  { topic:"Yard Surfaces", term:"Chip Seal (Tar-and-Chip)",
+    q:"What is chip seal?",
+    correct:"Sprayed liquid asphalt with crushed stone rolled into it",
+    distractors:["Compacted aggregate base with a thin asphalt cap","Asphalt millings re-laid and rolled","Concrete with a chipped-stone surface treatment"],
+    excerpt:"Low-grade paved surface — sprayed liquid asphalt with crushed stone rolled into it." },
+
+  // ============ Industrial Uses ============
+  { topic:"Industrial Uses", term:"Machine Shop",
+    q:"What is the typical model for a machine shop?",
+    correct:"A job-shop model — produces custom or small-batch parts to client specs",
+    distractors:["A mass-production model — long runs of standardized parts","An assembly model — combines pre-made parts","A process model — continuous bulk output"],
+    excerpt:"Typically a job-shop model — produces custom or small-batch components to client specs rather than mass-produced goods." },
+  { topic:"Industrial Uses", term:"Machine Shop",
+    q:"What power configuration is a machine shop typically?",
+    correct:"480V 3-phase (power-intensive)",
+    distractors:["120V single-phase","208V single-phase","4,160V high-tension"],
+    excerpt:"Power-intensive (often 480V 3-phase), requires reinforced floors for heavy equipment, generates metal chips/coolant waste." },
+
+  { topic:"Industrial Uses", term:"Fabricator (Metal Fabrication Shop)",
+    q:"What distinguishes a fabricator from a machine shop?",
+    correct:"Working at larger scale with less precision tolerance: more welding, cutting, and forming; less precision machining",
+    distractors:["Working with plastics and composites instead of metal","Only producing finished consumer goods","Working only with rounded stock, not flat plate"],
+    excerpt:"Distinguished from a machine shop by working at larger scale with less precision tolerance: more welding, cutting, and forming; less precision machining." },
+
+  { topic:"Industrial Uses", term:"Assembly",
+    q:"What do pure assembly operations typically NOT do?",
+    correct:"Raw-material processing — they only combine pre-made components",
+    distractors:["Quality inspection of finished products","Final packaging and labeling","Conveyor-based workflow"],
+    excerpt:"Pure assembly operations do little to no raw-material processing — they receive parts from upstream suppliers and put them together." },
+
+  { topic:"Industrial Uses", term:"Foundry",
+    q:"What does a foundry do?",
+    correct:"Melts metal and pours it into molds to produce castings",
+    distractors:["Welds raw metal stock into finished structures","Machines metal blocks to precision tolerances","Assembles pre-cast metal parts into finished goods"],
+    excerpt:"Heavy industrial facility that melts metal and pours it into molds to produce castings (engine blocks, pipe fittings, industrial components)." },
+
+  { topic:"Industrial Uses", term:"Process Manufacturing",
+    q:"What distinguishes process manufacturing from discrete manufacturing?",
+    correct:"Output is bulk or continuous (liquids, gases, powders, chemicals); ingredients can't be broken back down",
+    distractors:["It produces countable discrete parts like cars or electronics","It uses only manual labor and no automation","It is always batch-only with no continuous flow"],
+    excerpt:"Output is typically bulk or continuous (liquids, gases, powders, chemicals, food, pharmaceuticals, petroleum products) rather than discrete units. Contrasts with discrete manufacturing (assembly of countable parts — cars, electronics, furniture)." },
+
+  // ============ Lighting ============
+  { topic:"Lighting", term:"Pole-Mounted Lighting",
+    q:"What is the typical height of pole-mounted yard lights?",
+    correct:"20'–40' high",
+    distractors:["10'–15' high","50'–75' high","100'+ high"],
+    excerpt:"Tall freestanding light poles (typically 20'–40' high) used to illuminate yards, parking, and truck courts." },
+
+  { topic:"Lighting", term:"Wall Pack",
+    q:"Where are wall packs typically mounted?",
+    correct:"Directly to the exterior wall, over dock doors, man doors, and along building perimeters",
+    distractors:["On freestanding poles in the yard","On the roof parapet pointing down","Inside the warehouse on column faces"],
+    excerpt:"Light fixture mounted directly to the exterior wall of a building, typically over dock doors, man doors, and along building perimeters." },
+
+  { topic:"Lighting", term:"LED Retrofit",
+    q:"What energy savings does an LED retrofit typically deliver?",
+    correct:"50–70% energy savings",
+    distractors:["10–25%","25–40%","80–95%"],
+    excerpt:"A common value-add CapEx item — reduces energy costs 50–70%, improves light quality and uniformity, and often qualifies for utility rebates." },
+
+  { topic:"Lighting", term:"Foot-Candle (fc)",
+    q:"What foot-candle range is typical for IOS yards?",
+    correct:"1–5 fc",
+    distractors:["0.1–0.5 fc","5–10 fc","20–50 fc"],
+    excerpt:"Typical benchmarks: IOS yards 1–5 fc; truck courts 3–5 fc; security-sensitive areas 5–10 fc; warehouse interiors 20–50 fc." },
+  { topic:"Lighting", term:"Foot-Candle (fc)",
+    q:"What foot-candle range is typical for warehouse interiors?",
+    correct:"20–50 fc",
+    distractors:["5–10 fc","10–15 fc","75–100 fc"],
+    excerpt:"warehouse interiors 20–50 fc." },
+
+  // ============ Stormwater ============
+  { topic:"Stormwater", term:"SWPPP",
+    q:"What does SWPPP stand for and when is it mandated?",
+    correct:"Storm Water Pollution Prevention Plan — mandated for sites disturbing ≥1 acre",
+    distractors:["Site Wastewater Permit Plan — for sites over 5 acres","Stormwater Permit Procedure — for sites over 10 acres","Sewage and Wastewater Protection Program — universal"],
+    excerpt:"Storm Water Pollution Prevention Plan. ... Mandated under NPDES for sites disturbing ≥1 acre." },
+
+  { topic:"Stormwater", term:"NPDES",
+    q:"What does NPDES stand for and which act authorizes it?",
+    correct:"National Pollutant Discharge Elimination System — Federal Clean Water Act",
+    distractors:["National Permit Discharge Environmental Standards — Clean Air Act","Northeast Pollution Discharge Enforcement Standard — RCRA","Natural Pollution Detection and Environmental Surveillance — NEPA"],
+    excerpt:"National Pollutant Discharge Elimination System. Federal Clean Water Act permitting program (administered by EPA and delegated state agencies)." },
+
+  { topic:"Stormwater", term:"Retention Basin",
+    q:"What distinguishes a retention basin?",
+    correct:"It has a permanent pool — releases water slowly via evaporation and infiltration",
+    distractors:["It drains dry between storms via a controlled outlet","It uses a vegetated channel rather than a basin","It pipes runoff directly to the municipal storm sewer"],
+    excerpt:"Stormwater feature that permanently holds water — captures runoff and releases it slowly via evaporation and infiltration. Has a permanent pool." },
+
+  { topic:"Stormwater", term:"Detention Basin",
+    q:"How does a detention basin behave between storms?",
+    correct:"It drains dry — releases stored water via a controlled outlet",
+    distractors:["It maintains a permanent pool","It infiltrates all water into the soil","It pumps water to a city retention basin"],
+    excerpt:"Stormwater feature that temporarily holds runoff during storms and releases it via a controlled outlet, then drains dry. No permanent pool." },
+
+  { topic:"Stormwater", term:"Bio-Swale",
+    q:"In which states are bio-swales often required by modern stormwater codes?",
+    correct:"CA, CO, WA",
+    distractors:["TX, FL, GA","NY, NJ, MA","AZ, NM, NV"],
+    excerpt:"Often required by modern stormwater codes in CA, CO, WA." },
+
+  // ============ Site Protection ============
+  { topic:"Site Protection", term:"Bollard",
+    q:"What is the IOS-standard bollard construction?",
+    correct:"Concrete-filled steel pipe",
+    distractors:["Solid cast iron","Reinforced polymer","Hollow galvanized steel"],
+    excerpt:"Concrete-filled steel pipe bollards are the IOS standard; removable and decorative variants exist." },
+
+  { topic:"Site Protection", term:"Wheel Stop",
+    q:"What is the main drawback of wheel stops compared to curbing?",
+    correct:"They can be a tripping hazard and shift over time",
+    distractors:["They cost more per stall than curbing","They require more concrete than curbing","They can't be removed once installed"],
+    excerpt:"Cheaper and more flexible than continuous curbing but can be a tripping hazard and shift over time." },
+
+  { topic:"Site Protection", term:"Curbing",
+    q:"What does curbing do that wheel stops don't?",
+    correct:"Channels stormwater and provides continuous edge protection",
+    distractors:["Reduces overall site cost","Allows individual stalls to be re-configured","Eliminates the need for landscape buffers"],
+    excerpt:"Continuous concrete edge along a parking area, drive aisle, or landscape boundary. Defines circulation, channels stormwater, and protects landscaping. More expensive to install than wheel stops but more durable and lower maintenance." },
+
+  // ============ Freight & Logistics ============
+  { topic:"Freight & Logistics", term:"3PL (Third-Party Logistics)",
+    q:"What does a 3PL do?",
+    correct:"Executes logistics functions (warehousing, fulfillment, transportation, inventory) on behalf of a shipper",
+    distractors:["Manages an entire supply chain without owning assets","Owns the freight and resells it to retailers","Only operates final-mile delivery vans"],
+    excerpt:"Outsourced provider that executes logistics functions on behalf of a shipper — typically warehousing, fulfillment, transportation, and inventory management." },
+  { topic:"Freight & Logistics", term:"3PL (Third-Party Logistics)",
+    q:"Which of these is a 3PL?",
+    correct:"NFI",
+    distractors:["BNSF","Maersk","Triton"],
+    excerpt:"Examples: NFI, DHL Supply Chain, GXO, Saia, XPO." },
+
+  { topic:"Freight & Logistics", term:"4PL (Fourth-Party Logistics)",
+    q:"How does a 4PL differ from a 3PL?",
+    correct:"Asset-light — orchestrates multiple 3PLs, carriers, and technology platforms without owning warehouses or trucks",
+    distractors:["Owns more assets than a 3PL (warehouses, trucks, and ships)","Only handles international freight, never domestic","Provides last-mile delivery vans only"],
+    excerpt:"Asset-light logistics provider that manages an entire supply chain on behalf of a shipper — typically orchestrating multiple 3PLs, carriers, and technology platforms. Doesn't own warehouses or trucks." },
+
+  { topic:"Freight & Logistics", term:"LTL (Less-Than-Truckload)",
+    q:"What is the typical LTL load size?",
+    correct:"150–15,000 lbs",
+    distractors:["Under 100 lbs","20,000–30,000 lbs","40,000–50,000 lbs"],
+    excerpt:"Freight shipping mode for loads too small to fill a full trailer (typically 150–15,000 lbs)." },
+  { topic:"Freight & Logistics", term:"LTL (Less-Than-Truckload)",
+    q:"Which of these is an LTL carrier?",
+    correct:"Old Dominion",
+    distractors:["Maersk","UPS","BNSF"],
+    excerpt:"LTL carriers (Old Dominion, Saia, XPO, Estes, FedEx Freight) require cross-dock terminals." },
+
+  { topic:"Freight & Logistics", term:"FTL (Full Truckload)",
+    q:"What real-estate demand does FTL drive (unlike LTL)?",
+    correct:"Trailer parking, drop yards, and standard distribution warehouses",
+    distractors:["Cross-dock terminals with many small doors","Container yards near ports","Rail-served intermodal ramps"],
+    excerpt:"FTL doesn't require sortation infrastructure — drives demand for trailer parking, drop yards, and standard distribution warehouses." },
+
+  { topic:"Freight & Logistics", term:"Drayage",
+    q:"What is the typical drayage radius?",
+    correct:"Within a 50-mile radius",
+    distractors:["Within a 10-mile radius","Within a 100-mile radius","Within a 250-mile radius"],
+    excerpt:"Short-haul trucking that moves shipping containers between ports/rail yards and nearby warehouses or transload facilities — typically within a 50-mile radius." },
+
+  { topic:"Freight & Logistics", term:"Intermodal",
+    q:"What is the core feature of intermodal freight?",
+    correct:"Goods move in the same container across two or more modes — no rehandling of contents",
+    distractors:["Goods transfer between trucks of different carriers","Goods are repackaged at each mode change","Goods move only between truck and rail, never ship"],
+    excerpt:"Freight transportation using two or more modes (truck, rail, ship) with goods moving in the same container throughout — no rehandling of contents." },
+
+  { topic:"Freight & Logistics", term:"Reefer (Refrigerated Trailer)",
+    q:"What are reefer plug-ins?",
+    correct:"Electrical hookups in yards that power parked refrigerated trailers",
+    distractors:["Diesel fueling stations dedicated to reefer units","Charging stations for electric reefer tractors","Refrigerated docking pods at the building face"],
+    excerpt:"\"Reefer plug-ins\" or \"reefer outlets\" are electrical hookups in yards that power parked reefers — a specialized IOS amenity that commands premium rents from food and pharma tenants." },
+
+  { topic:"Freight & Logistics", term:"Chassis Pool / Chassis Yard",
+    q:"What is an IEP (Intermodal Equipment Provider)?",
+    correct:"A company that operates shared chassis pools (e.g., TRAC, DCLI, Flexi-Van)",
+    distractors:["A government inspector at intermodal ramps","An insurance broker for cargo claims","A railroad-employed yard manager"],
+    excerpt:"Chassis pools are shared inventories of chassis (operated by IEPs — Intermodal Equipment Providers like TRAC, DCLI, Flexi-Van)." },
+
+  { topic:"Freight & Logistics", term:"Container Yard (CY)",
+    q:"What stacking height is common at a container yard?",
+    correct:"3–5 high",
+    distractors:["1–2 high","6–8 high","10+ high"],
+    excerpt:"Site requirements: heavy-duty surfacing (paving or thick base), high stacking capability (often 3–5 high), top-pick or reach-stacker access." },
+
+  // ============ Warehouse Operations ============
+  { topic:"Warehouse Operations", term:"OS&D (Over, Short & Damaged)",
+    q:"What does OS&D stand for?",
+    correct:"Over, Short & Damaged",
+    distractors:["Outbound Sortation & Distribution","Order Status & Delivery","On-Site Damage Report"],
+    excerpt:"Standard freight industry term for inventory discrepancies discovered at receiving: Over = more units received than the bill of lading shows; Short = fewer units than expected; Damaged = product arrived in unsellable condition." },
+
+  { topic:"Warehouse Operations", term:"WMS (Warehouse Management System)",
+    q:"Which of these is an industry-standard WMS platform?",
+    correct:"Manhattan Associates",
+    distractors:["Salesforce","Workday","ServiceNow"],
+    excerpt:"Industry-standard platforms include Manhattan Associates, Blue Yonder (JDA), SAP EWM, Oracle WMS, and Körber." },
+
+  { topic:"Warehouse Operations", term:"Pick-and-Pack",
+    q:"What kind of operation does pick-and-pack characterize?",
+    correct:"E-commerce / fulfillment — high SKU count, small order size, labor-intensive",
+    distractors:["Bulk distribution — full pallets, full truckloads","Cold storage — pallet-in, pallet-out","Cross-dock LTL — sortation only"],
+    excerpt:"Distinguishes e-commerce/fulfillment operations (high SKU count, small order size, labor-intensive) from bulk distribution (full pallets, full truckloads)." },
+
+  { topic:"Warehouse Operations", term:"Slotting / Slot Optimization",
+    q:"What is the purpose of slot optimization?",
+    correct:"Minimize labor, travel time, and congestion by placing high-velocity SKUs near pack-out",
+    distractors:["Maximize total storage density in the racking","Match SKU placement to tenant lease term","Reduce sprinkler density requirements"],
+    excerpt:"Strategic placement of SKUs in warehouse storage locations to minimize labor, travel time, and congestion. High-velocity items go near pack-out stations; low-velocity items go in deeper or higher locations." },
+
+  { topic:"Warehouse Operations", term:"VAS (Value-Added Services)",
+    q:"What kinds of operations qualify as VAS?",
+    correct:"Light assembly, kitting, labeling, repackaging, QC, returns processing, ticketing, customization",
+    distractors:["Trucking and final-mile delivery","Permitting and tenant fit-out","Capital markets and lease administration"],
+    excerpt:"Warehouse operations performed on inventory beyond simple storage and shipping — typically light assembly, kitting, labeling, repackaging, quality inspection, returns processing, ticketing, and customization." },
+
+  // ============ Specialized Facilities ============
+  { topic:"Specialized Facilities", term:"Bonded Warehouse",
+    q:"For how long can imported goods be stored in a bonded warehouse without paying duty?",
+    correct:"Up to 5 years",
+    distractors:["Up to 1 year","Up to 3 years","Up to 10 years"],
+    excerpt:"Secured facility licensed by U.S. Customs and Border Protection (CBP) where imported goods can be stored without payment of duties for up to 5 years." },
+
+  { topic:"Specialized Facilities", term:"FTZ (Foreign Trade Zone)",
+    q:"What broader benefit does an FTZ have over a bonded warehouse?",
+    correct:"Allows manufacturing/transformation of goods, not just storage",
+    distractors:["Allows storage for 10 years instead of 5","Eliminates state sales tax in addition to duty","Removes the need for any customs bond"],
+    excerpt:"Broader benefits than a bonded warehouse (allows manufacturing/transformation). Operated under FTZ Board oversight." },
+
+  { topic:"Specialized Facilities", term:"HAZMAT-Permitted Facility",
+    q:"What infrastructure is typically required at a HAZMAT-permitted facility?",
+    correct:"Enhanced fire suppression (often foam systems), containment, ventilation, and spill response",
+    distractors:["Backup diesel generators rated to 1 MW","ESFR-only sprinklers and 40' clear height","FF50/FL35 slab and 480V three-phase"],
+    excerpt:"Requires specialized permits (local fire department, EPA, state environmental agency), enhanced fire suppression (often foam systems), containment, ventilation, and spill response infrastructure." },
+
+  // ============ IOS Property Types ============
+  { topic:"IOS Property Types", term:"LTL Facilities",
+    q:"What is the typical shape of an LTL cross-dock building?",
+    correct:"Long, narrow rectangles 60–120 ft deep with dock doors on both long sides",
+    distractors:["Square big-box footprint with docks on one side","Multi-story urban infill with elevated decks","Round hub structure with radial dock fingers"],
+    excerpt:"Long, narrow rectangles (60–120 ft deep) with dock doors on both long sides (often 100–300+ doors), shallow building footprint." },
+  { topic:"IOS Property Types", term:"LTL Facilities",
+    q:"Which of these is a typical LTL Facility tenant?",
+    correct:"Old Dominion",
+    distractors:["Triton","BNSF","Maersk"],
+    excerpt:"Tenants: Old Dominion, Saia, XPO, Estes, ABF, FedEx Freight." },
+
+  { topic:"IOS Property Types", term:"Transload Facilities",
+    q:"What is the defining feature of a transload facility?",
+    correct:"Rail access on one side and truck access on the other — freight transfers between modes",
+    distractors:["Containers stacked 5–6 high with gantry cranes","Cross-dock building with 100+ small doors","High-pile racking with ESFR sprinklers"],
+    excerpt:"Sites where freight transfers between transportation modes — typically rail-to-truck. Defined by rail access (lead tracks, spurs) on one side and truck access on the other." },
+
+  { topic:"IOS Property Types", term:"Intermodal Facilities",
+    q:"How large are intermodal container yards typically?",
+    correct:"Often 50–200+ acres",
+    distractors:["5–10 acres","15–25 acres","500–1,000 acres"],
+    excerpt:"Massive paved or graveled yards for container stacking (often 50–200+ acres), gantry cranes or top-picks for lifting, and minimal building footprint." },
+
+  { topic:"IOS Property Types", term:"Express / Parcel Terminals",
+    q:"What distinguishes express/parcel terminals from LTL terminals?",
+    correct:"Higher throughput and more automation, plus very large van yards for local delivery",
+    distractors:["Smaller dock door counts but larger yards","Rail-served instead of truck-served","Multi-story buildings with elevated docks"],
+    excerpt:"Cross-dock-style buildings with heavy interior conveyor/automation, plus very large yards for both tractor-trailers (line haul) and delivery vans/sprinters (local). Higher throughput and more automation than LTL." },
+
+  { topic:"IOS Property Types", term:"Drayage Yards",
+    q:"Where are drayage yards typically concentrated?",
+    correct:"Within 30 miles of major ports",
+    distractors:["Within 100 miles of any intermodal rail ramp","Anywhere along interstate corridors","Near central-city distribution hubs only"],
+    excerpt:"Concentrated within 30 miles of major ports. Often colocated with empty container or chassis storage." },
+
+  { topic:"IOS Property Types", term:"Container Depots / Empty Container Yards",
+    q:"How high are containers typically stacked at empty container yards?",
+    correct:"3–6 high",
+    distractors:["1–2 high","7–8 high","10+ high"],
+    excerpt:"Acres of stacked containers (typically 3–6 high), top-pick or reach-stacker equipment, small gatehouse and maintenance/repair shop." },
+
+  { topic:"IOS Property Types", term:"Chassis Depots",
+    q:"Which of these is a chassis depot operator?",
+    correct:"TRAC Intermodal",
+    distractors:["Old Dominion","Glovis America","ABC Supply"],
+    excerpt:"Tenants: TRAC Intermodal, DCLI, Flexi-Van, North American Chassis Pool Cooperative." },
+
+  { topic:"IOS Property Types", term:"Vehicle Processing Centers (VPCs)",
+    q:"What are rail-served Vehicle Processing Centers called?",
+    correct:"Auto ramps",
+    distractors:["Vehicle yards","Auto hubs","Car parks"],
+    excerpt:"Rail-served versions called \"auto ramps.\" Tenants: Glovis America, WWL Vehicle Services, Auto Warehousing Company." },
+
+  { topic:"IOS Property Types", term:"Building Materials / Construction Supply Yards",
+    q:"Which of these is a typical building materials yard tenant?",
+    correct:"ABC Supply",
+    distractors:["United Rentals","Penske Truck Leasing","Old Dominion"],
+    excerpt:"Tenants: ABC Supply, US LBM, Beacon Building Products, Stock Building Supply, regional lumber yards." },
+
+  { topic:"IOS Property Types", term:"Equipment Rental Yards",
+    q:"What is the typical size of an equipment rental yard?",
+    correct:"2–10 acres",
+    distractors:["Under 1 acre","20–50 acres","100+ acres"],
+    excerpt:"Smaller yards (2–10 acres typical) with paved or graveled surface, a customer-facing counter/showroom building, a shop for maintenance/repair." },
+
+  { topic:"IOS Property Types", term:"Equipment / Fleet Maintenance Shops",
+    q:"What is the typical service-bay count at a fleet maintenance shop?",
+    correct:"4–20+ bays",
+    distractors:["1–2 bays","30–50 bays","100+ bays"],
+    excerpt:"Building-heavier than most IOS uses: drive-through service bays (typically 4–20+ bays), grade-level overhead doors at both ends." },
+
+  // ============ Prologis Categories ============
+  { topic:"Prologis Categories", term:"Gateway distribution",
+    q:"What is the typical clear height for Gateway distribution?",
+    correct:"36'–40' clear",
+    distractors:["28'–32' clear","32'–36' clear","20'–26' clear"],
+    excerpt:"Typical spec: 36'–40' clear, 50'–60' × 60' column grid, 185'+ truck court." },
+  { topic:"Prologis Categories", term:"Gateway distribution",
+    q:"What is the typical size of Gateway distribution buildings?",
+    correct:"500K–1M+ SF",
+    distractors:["100K–250K SF","250K–500K SF","Under 100K SF"],
+    excerpt:"Typical size: 500K–1M+ SF. Examples of markets: South Dallas, Inland Empire East, Central PA, Savannah/Charleston corridor." },
+  { topic:"Prologis Categories", term:"Gateway distribution",
+    q:"Which of these is an example Gateway distribution market?",
+    correct:"South Dallas",
+    distractors:["Brooklyn","Downtown LA","Manhattan"],
+    excerpt:"Examples of markets: South Dallas, Inland Empire East, Central PA, Savannah/Charleston corridor." },
+
+  { topic:"Prologis Categories", term:"Multi-market distribution",
+    q:"How does multi-market distribution differ from Gateway?",
+    correct:"Same physical spec as Gateway but without port access — sits at highway hubs at the periphery of major metros",
+    distractors:["Smaller spec — 24'-28' clear and 100' truck courts","Always located inside dense urban centers","Multi-story product unlike Gateway"],
+    excerpt:"Same physical spec as Gateway but without port access — sit at highway hubs at the periphery of major metro areas." },
+
+  { topic:"Prologis Categories", term:"City distribution",
+    q:"What is the typical clear height for City distribution?",
+    correct:"28'–32' clear",
+    distractors:["20'–26' clear","32'–36' clear","36'–40' clear"],
+    excerpt:"Typical spec: 28'–32' clear, smaller column grid, 100'–130' truck court, more grade-level doors mixed in." },
+
+  { topic:"Prologis Categories", term:"Last Touch",
+    q:"What is the typical clear height for Last Touch buildings?",
+    correct:"20'–26' clear",
+    distractors:["28'–32' clear","32'–36' clear","36'–40' clear"],
+    excerpt:"Typical spec: 20'–26' clear, often older construction, mostly grade-level loading, tight truck circulation." },
+  { topic:"Prologis Categories", term:"Last Touch",
+    q:"What is the core economic insight about Last Touch buildings?",
+    correct:"The worst buildings physically, but they reach the most consumer income per SF and command the highest rents in their markets",
+    distractors:["The newest, most efficient buildings near consumers","Always operated by the largest national 3PLs","Best floor flatness and highest clear heights"],
+    excerpt:"The economic insight: the worst buildings physically, but they reach the most consumer income per SF and command the highest rents in their markets." }
+];
+
+/* ------------------------------------------------------------------
+   STATE & PERSISTENCE
+   ------------------------------------------------------------------ */
+const STORAGE_KEY = 'industrial-quiz-v2';
+const LEGACY_KEY = 'industrial-quiz-v1';
+const TOPICS = [...new Set(QUESTIONS.map(q => q.topic))]; // preserves deck order
+
+const state = {
+  selectedTopic: 'all',         // 'all' or a topic name
+  statusMode: 'all',            // 'all' | 'unmarked' | 'review' | 'got'
+  order: [],                    // shuffled indexes into QUESTIONS
+  cursor: 0,
+  right: 0,
+  wrong: 0,
+  streak: 0,
+  bestStreak: 0,
+  answered: {},                 // qIdx -> {choice, correct}
+  statusMap: {},                // qIdx -> 'got' | 'review'
+  answeredCurrent: false
+};
+
+function loadPersisted() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (saved.statusMap && typeof saved.statusMap === 'object') {
+        for (const k of Object.keys(saved.statusMap)) {
+          const i = parseInt(k, 10);
+          if (i >= 0 && i < QUESTIONS.length && (saved.statusMap[k] === 'got' || saved.statusMap[k] === 'review')) {
+            state.statusMap[i] = saved.statusMap[k];
+          }
+        }
+      }
+      if (typeof saved.bestStreak === 'number') state.bestStreak = saved.bestStreak;
+      if (typeof saved.selectedTopic === 'string') state.selectedTopic = saved.selectedTopic;
+      if (typeof saved.statusMode === 'string') state.statusMode = saved.statusMode;
+      return;
+    }
+    // One-time migration from v1 missedSet → statusMap['review']
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) {
+      const saved = JSON.parse(legacy);
+      if (Array.isArray(saved.missed)) {
+        saved.missed.forEach(i => { if (i < QUESTIONS.length) state.statusMap[i] = 'review'; });
+      }
+      if (typeof saved.bestStreak === 'number') state.bestStreak = saved.bestStreak;
+    }
+  } catch (e) { /* ignore */ }
+}
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      statusMap: state.statusMap,
+      bestStreak: state.bestStreak,
+      selectedTopic: state.selectedTopic,
+      statusMode: state.statusMode
+    }));
+  } catch (e) { /* ignore */ }
+}
+
+/* ------------------------------------------------------------------
+   DECK BUILDING
+   ------------------------------------------------------------------ */
+function matchesTopic(q) {
+  return state.selectedTopic === 'all' || q.topic === state.selectedTopic;
+}
+function matchesStatus(i) {
+  const s = state.statusMap[i];
+  switch (state.statusMode) {
+    case 'unmarked': return !s;
+    case 'review':   return s === 'review';
+    case 'got':      return s === 'got';
+    default:         return true;
+  }
+}
+function buildDeck() {
+  let pool = QUESTIONS
+    .map((q, i) => i)
+    .filter(i => matchesTopic(QUESTIONS[i]) && matchesStatus(i));
+  // Fisher–Yates shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  state.order = pool;
+  state.cursor = 0;
+  state.right = 0;
+  state.wrong = 0;
+  state.streak = 0;
+  state.answered = {};
+  state.answeredCurrent = false;
+}
+
+/* ------------------------------------------------------------------
+   RENDERING
+   ------------------------------------------------------------------ */
+const main = document.getElementById('main');
+const topicSelect = document.getElementById('topic-select');
+const statusFilter = document.getElementById('status-filter');
+const progressFill = document.getElementById('progress-fill');
+const statRight = document.getElementById('stat-right');
+const statWrong = document.getElementById('stat-wrong');
+const statStreak = document.getElementById('stat-streak');
+const statQ = document.getElementById('stat-q');
+const statTotal = document.getElementById('stat-total');
+
+function renderTopicSelect() {
+  topicSelect.innerHTML = '';
+  const optAll = document.createElement('option');
+  optAll.value = 'all';
+  optAll.textContent = `All topics (${QUESTIONS.length})`;
+  topicSelect.appendChild(optAll);
+  TOPICS.forEach(t => {
+    const count = QUESTIONS.filter(q => q.topic === t).length;
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = `${t} (${count})`;
+    topicSelect.appendChild(opt);
+  });
+  topicSelect.value = state.selectedTopic;
+}
+
+function renderStatusFilter() {
+  // Counts within the currently selected topic
+  const inTopic = QUESTIONS.map((q, i) => i).filter(i => matchesTopic(QUESTIONS[i]));
+  const counts = { all: inTopic.length, unmarked: 0, review: 0, got: 0 };
+  inTopic.forEach(i => {
+    const s = state.statusMap[i];
+    if (s === 'got') counts.got++;
+    else if (s === 'review') counts.review++;
+    else counts.unmarked++;
+  });
+  document.getElementById('count-all').textContent = counts.all;
+  document.getElementById('count-unmarked').textContent = counts.unmarked;
+  document.getElementById('count-review').textContent = counts.review;
+  document.getElementById('count-got').textContent = counts.got;
+  statusFilter.querySelectorAll('.seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === state.statusMode);
+  });
+}
+
+function shuffleArr(a) {
+  const out = a.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+function renderCurrent() {
+  if (state.order.length === 0) {
+    main.innerHTML = `
+      <div class="quiz-card">
+        <div class="empty-state">
+          <h2>No questions in the deck</h2>
+          <p>Pick at least one topic above, or turn off "Missed only".</p>
+        </div>
+      </div>`;
+    progressFill.style.width = '0%';
+    return;
+  }
+  if (state.cursor >= state.order.length) {
+    const total = state.right + state.wrong;
+    const pct = total === 0 ? 0 : Math.round((state.right / total) * 100);
+    const reviewCount = Object.values(state.statusMap).filter(s => s === 'review').length;
+    main.innerHTML = `
+      <div class="quiz-card">
+        <div class="empty-state">
+          <h2>Session complete</h2>
+          <div class="big-score">${state.right}/${total}</div>
+          <div class="pct">${pct}% &nbsp;·&nbsp; best streak: ${state.bestStreak}</div>
+          <p style="margin-top:18px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+            <button class="btn primary" onclick="restartSession()">Restart session</button>
+            <button class="btn" onclick="studyReview()">Study Review pile (${reviewCount})</button>
+          </p>
+        </div>
+      </div>`;
+    progressFill.style.width = '100%';
+    return;
+  }
+
+  const qIdx = state.order[state.cursor];
+  const q = QUESTIONS[qIdx];
+
+  // Stable per-question option shuffle
+  if (!q._shuffledOptions) {
+    q._shuffledOptions = shuffleArr([q.correct, ...q.distractors]);
+  }
+  const options = q._shuffledOptions;
+  const letters = ['A','B','C','D'];
+
+  const prior = state.answered[qIdx];
+  state.answeredCurrent = !!prior;
+  const currentMark = state.statusMap[qIdx]; // 'got' | 'review' | undefined
+
+  const markPill = currentMark === 'got'
+    ? `<span class="mark-pill got">✓ Got it</span>`
+    : currentMark === 'review'
+      ? `<span class="mark-pill review">⟲ Needs review</span>`
+      : '';
+
+  main.innerHTML = `
+    <div class="quiz-card">
+      <div class="quiz-header">
+        <span class="term-tag">${escapeHTML(q.term)}</span>
+        <span style="display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap">
+          ${markPill}
+          <span class="topic-tag">${escapeHTML(q.topic)}</span>
+        </span>
+      </div>
+      <div class="question">${escapeHTML(q.q)}</div>
+      <div class="options" id="options">
+        ${options.map((opt, i) => `
+          <button class="option" data-i="${i}">
+            <span class="letter">${letters[i]}</span>
+            <span class="text">${escapeHTML(opt)}</span>
+          </button>`).join('')}
+      </div>
+      <div class="feedback" id="feedback">
+        <div class="verdict" id="verdict"></div>
+        <div class="excerpt-label">From the deck</div>
+        <div class="excerpt" id="excerpt"></div>
+      </div>
+      <div class="mark-row" id="mark-row" style="display:none">
+        <button class="mark-btn got ${currentMark === 'got' ? 'is-set' : ''}" id="btn-got">✓ Got it</button>
+        <button class="mark-btn review ${currentMark === 'review' ? 'is-set' : ''}" id="btn-review">⟲ Needs review</button>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" id="btn-prev" ${state.cursor === 0 ? 'disabled' : ''}>← Prev</button>
+        <button class="btn primary" id="btn-next">Next →</button>
+      </div>
+    </div>`;
+
+  const optionEls = main.querySelectorAll('.option');
+  optionEls.forEach(el => {
+    el.onclick = () => answer(qIdx, parseInt(el.dataset.i, 10), options);
+  });
+  document.getElementById('btn-prev').onclick = prev;
+  document.getElementById('btn-next').onclick = next;
+  document.getElementById('btn-got').onclick = () => markStatus(qIdx, 'got');
+  document.getElementById('btn-review').onclick = () => markStatus(qIdx, 'review');
+
+  if (prior) revealAnswer(qIdx, options, prior.choice);
+  updateStats();
+}
+
+function markStatus(qIdx, status) {
+  const current = state.statusMap[qIdx];
+  // Toggle off if clicking same mark
+  if (current === status) {
+    delete state.statusMap[qIdx];
+  } else {
+    state.statusMap[qIdx] = status;
+  }
+  persist();
+  renderStatusFilter();
+  // Update pill + buttons in-place without re-rendering question
+  const pillHost = main.querySelector('.quiz-header > span:last-child');
+  const existingPill = pillHost.querySelector('.mark-pill');
+  if (existingPill) existingPill.remove();
+  const newMark = state.statusMap[qIdx];
+  if (newMark) {
+    const pill = document.createElement('span');
+    pill.className = 'mark-pill ' + newMark;
+    pill.textContent = newMark === 'got' ? '✓ Got it' : '⟲ Needs review';
+    pillHost.insertBefore(pill, pillHost.firstChild);
+  }
+  const btnGot = document.getElementById('btn-got');
+  const btnReview = document.getElementById('btn-review');
+  if (btnGot) btnGot.classList.toggle('is-set', newMark === 'got');
+  if (btnReview) btnReview.classList.toggle('is-set', newMark === 'review');
+}
+
+function answer(qIdx, chosenI, options) {
+  if (state.answered[qIdx]) return;
+  const q = QUESTIONS[qIdx];
+  const isRight = options[chosenI] === q.correct;
+  state.answered[qIdx] = { choice: chosenI, correct: isRight };
+  state.answeredCurrent = true;
+  if (isRight) {
+    state.right++;
+    state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+  } else {
+    state.wrong++;
+    state.streak = 0;
+  }
+  persist();
+  revealAnswer(qIdx, options, chosenI);
+  updateStats();
+}
+
+function revealAnswer(qIdx, options, chosenI) {
+  const q = QUESTIONS[qIdx];
+  const optionEls = main.querySelectorAll('.option');
+  optionEls.forEach((el, i) => {
+    el.disabled = true;
+    const isCorrect = options[i] === q.correct;
+    const isChosen = i === chosenI;
+    if (isCorrect) el.classList.add('is-correct');
+    else if (isChosen) el.classList.add('is-wrong');
+    else el.classList.add('dim');
+  });
+  const fb = document.getElementById('feedback');
+  const verdict = document.getElementById('verdict');
+  const excerpt = document.getElementById('excerpt');
+  const isRight = options[chosenI] === q.correct;
+  fb.classList.add('show');
+  fb.classList.toggle('right', isRight);
+  fb.classList.toggle('wrong', !isRight);
+  verdict.textContent = isRight ? 'Correct' : 'Not quite';
+  excerpt.textContent = '"' + q.excerpt + '"';
+  const markRow = document.getElementById('mark-row');
+  if (markRow) markRow.style.display = 'flex';
+}
+
+function next() {
+  state.cursor++;
+  renderCurrent();
+  scrollToTop();
+}
+function prev() {
+  if (state.cursor === 0) return;
+  state.cursor--;
+  renderCurrent();
+  scrollToTop();
+}
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateStats() {
+  statRight.textContent = state.right;
+  statWrong.textContent = state.wrong;
+  statStreak.textContent = state.streak;
+  statQ.textContent = Math.min(state.cursor + 1, state.order.length);
+  statTotal.textContent = state.order.length;
+  const pct = state.order.length === 0
+    ? 0
+    : Math.min(100, ((state.cursor + (state.answeredCurrent ? 1 : 0)) / state.order.length) * 100);
+  progressFill.style.width = pct + '%';
+}
+
+function restartSession() {
+  // Re-shuffle option orders for fresh experience
+  QUESTIONS.forEach(q => { delete q._shuffledOptions; });
+  buildDeck();
+  renderStatusFilter();
+  renderCurrent();
+}
+function studyReview() {
+  state.statusMode = 'review';
+  persist();
+  QUESTIONS.forEach(q => { delete q._shuffledOptions; });
+  buildDeck();
+  renderStatusFilter();
+  renderCurrent();
+}
+window.restartSession = restartSession;
+window.studyReview = studyReview;
+
+/* ------------------------------------------------------------------
+   TOOLBAR & KEYBOARD
+   ------------------------------------------------------------------ */
+topicSelect.onchange = () => {
+  state.selectedTopic = topicSelect.value;
+  persist();
+  QUESTIONS.forEach(q => { delete q._shuffledOptions; });
+  buildDeck();
+  renderStatusFilter();
+  renderCurrent();
+};
+statusFilter.querySelectorAll('.seg-btn').forEach(b => {
+  b.onclick = () => {
+    state.statusMode = b.dataset.mode;
+    persist();
+    QUESTIONS.forEach(q => { delete q._shuffledOptions; });
+    buildDeck();
+    renderStatusFilter();
+    renderCurrent();
+  };
+});
+document.getElementById('btn-shuffle').onclick = () => {
+  QUESTIONS.forEach(q => { delete q._shuffledOptions; });
+  buildDeck(); renderCurrent();
+};
+document.getElementById('btn-clear-marks').onclick = () => {
+  const inTopic = QUESTIONS.map((q, i) => i).filter(i => matchesTopic(QUESTIONS[i]));
+  const marked = inTopic.filter(i => state.statusMap[i]).length;
+  if (marked === 0) return;
+  const label = state.selectedTopic === 'all' ? 'all topics' : state.selectedTopic;
+  if (!confirm(`Clear all Got It / Needs Review marks in ${label}? (${marked} marked)`)) return;
+  inTopic.forEach(i => { delete state.statusMap[i]; });
+  persist();
+  buildDeck();
+  renderStatusFilter();
+  renderCurrent();
+};
+document.getElementById('btn-restart').onclick = () => restartSession();
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea, select')) return;
+  const key = e.key.toLowerCase();
+  if (['1','2','3','4'].includes(key)) {
+    const idx = parseInt(key, 10) - 1;
+    const btn = main.querySelector(`.option[data-i="${idx}"]`);
+    if (btn && !btn.disabled) btn.click();
+    e.preventDefault();
+  } else if (key === 'enter' || key === ' ') {
+    if (state.answeredCurrent) {
+      next();
+      e.preventDefault();
+    }
+  } else if (key === 'g') {
+    const qIdx = state.order[state.cursor];
+    if (qIdx !== undefined) markStatus(qIdx, 'got');
+  } else if (key === 'v') {
+    const qIdx = state.order[state.cursor];
+    if (qIdx !== undefined) markStatus(qIdx, 'review');
+  } else if (key === 's') {
+    QUESTIONS.forEach(q => { delete q._shuffledOptions; });
+    buildDeck(); renderCurrent();
+  } else if (key === 'r') {
+    restartSession();
+  } else if (key === 'arrowleft') {
+    prev();
+  } else if (key === 'arrowright' && state.answeredCurrent) {
+    next();
+  }
+});
+
+// Swipe (mobile): left = next (if answered), right = prev
+let touchStartX = null;
+main.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
+}, { passive: true });
+main.addEventListener('touchend', (e) => {
+  if (touchStartX === null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 60) {
+    if (dx < 0 && state.answeredCurrent) next();
+    else if (dx > 0) prev();
+  }
+  touchStartX = null;
+}, { passive: true });
+
+/* ------------------------------------------------------------------
+   UTILITIES
+   ------------------------------------------------------------------ */
+function escapeHTML(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/* ------------------------------------------------------------------
+   BOOT
+   ------------------------------------------------------------------ */
+loadPersisted();
+renderTopicSelect();
+renderStatusFilter();
+buildDeck();
+renderCurrent();
+</script>
+</body>
+</html>
