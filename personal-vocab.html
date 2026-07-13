@@ -176,19 +176,20 @@
     overflow-y: auto;
   }
   .word {
-    font-size: 34px;
+    font-size: 38px;
     font-weight: 800;
     letter-spacing: -0.5px;
     line-height: 1.15;
     word-break: break-word;
   }
   .definition {
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 500;
-    line-height: 1.65;
+    line-height: 1.6;
     color: var(--on-card);
     max-width: 40ch;
   }
+  .definition.long { font-size: 16px; line-height: 1.55; }
   .face-hint {
     text-align: center;
     font-size: 11px;
@@ -454,7 +455,7 @@
 
   @media (min-width: 560px) {
     .title h1 { font-size: 34px; }
-    .word { font-size: 40px; }
+    .word { font-size: 44px; }
     .card { min-height: 360px; }
   }
 </style>
@@ -788,6 +789,7 @@ function render() {
   cardEl.classList.toggle("flipped", flipped);
   $("wordEl").textContent = c.w;
   $("defEl").textContent = c.d;
+  $("defEl").classList.toggle("long", c.d.length > 160);
   $("chipsFront").innerHTML = chipsHtml(c);
   $("chipsBack").innerHTML = chipsHtml(c);
   $("posEl").textContent = (pos + 1) + " / " + deck.length;

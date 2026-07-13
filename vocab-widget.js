@@ -103,7 +103,7 @@ function makeWidget() {
   w.addSpacer(small ? 6 : 8);
 
   const wordText = w.addText(word);
-  wordText.font = Font.heavySystemFont(small ? 20 : 26);
+  wordText.font = Font.heavySystemFont(small ? 22 : 28);
   wordText.textColor = new Color("#F3EEE4");
   wordText.minimumScaleFactor = 0.6;
   wordText.lineLimit = 1;
@@ -111,7 +111,7 @@ function makeWidget() {
   w.addSpacer(small ? 4 : 6);
 
   const defText = w.addText(def);
-  defText.font = Font.mediumSystemFont(small ? 10 : 12);
+  defText.font = Font.mediumSystemFont(small ? 11 : 14);
   defText.textColor = new Color("#F3EEE4", 0.72);
   defText.minimumScaleFactor = 0.75;
   defText.lineLimit = small ? 4 : 3;
