@@ -730,6 +730,7 @@ function rebuildDeck(preserveWord) {
   const all = fullDeck();
   deck = hideKnown ? all.filter(c => !known.has(c.w)) : all;
   order = deck.map((_, i) => i);
+  shuffleOrder(); // always start in a fresh random order
   pos = 0;
   if (preserveWord) {
     const idx = order.findIndex(i => deck[i].w === preserveWord);
@@ -739,11 +740,15 @@ function rebuildDeck(preserveWord) {
   render();
 }
 
-function shuffle() {
+function shuffleOrder() {
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
+}
+
+function shuffle() {
+  shuffleOrder();
   pos = 0;
   flipped = false;
   render();
@@ -829,8 +834,9 @@ function toggleKnown() {
 }
 
 function rebuildDeckAfterKnown() {
-  const all = fullDeck();
-  deck = all.filter(c => !known.has(c.w));
+  // drop newly-known cards while preserving the current shuffled sequence
+  const seq = order.map(i => deck[i]).filter(c => !known.has(c.w));
+  deck = seq;
   order = deck.map((_, i) => i);
   if (pos >= deck.length) pos = 0;
   flipped = false;
